@@ -1,6 +1,6 @@
 package com.example.monoauction.common.execptions;
 
-import com.example.monoauction.authentication.model.enums.ErrorMessage;
+import com.example.monoauction.common.enums.ErrorMessage;
 import lombok.Getter;
 
 @Getter

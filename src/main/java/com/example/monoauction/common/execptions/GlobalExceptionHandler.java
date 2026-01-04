@@ -1,6 +1,7 @@
 package com.example.monoauction.common.execptions;
 
-import com.example.monoauction.authentication.model.enums.ErrorMessage;
+import com.example.monoauction.common.enums.ErrorMessage;
+import com.example.monoauction.common.dto.ErrorResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,10 +18,10 @@ import java.util.Map;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(AuctionHouseException.class)
-    public ResponseEntity<ApiError> handleCrmException(AuctionHouseException exception) {
+    public ResponseEntity<ErrorResponse> handleCrmException(AuctionHouseException exception) {
         final ErrorMessage errorMessage = exception.getErrorMessage();
         final HttpStatus status = ErrorMessage.getHttpStatus(errorMessage);
-        final ApiError body = createApiError(errorMessage);
+        final ErrorResponse body = createErrorResponse(errorMessage);
         return ResponseEntity.status(status).body(body);
     }
 
@@ -28,7 +29,7 @@ public class GlobalExceptionHandler {
             MethodArgumentTypeMismatchException.class,
     })
 
-    public ResponseEntity<ApiError> handleExceptions(MethodArgumentTypeMismatchException exception) {
+    public ResponseEntity<ErrorResponse> handleExceptions(MethodArgumentTypeMismatchException exception) {
         final ErrorMessage errorMessage = ErrorMessage.BAD_REQUEST;
         final HttpStatus status = ErrorMessage.getHttpStatus(errorMessage);
 
@@ -49,12 +50,12 @@ public class GlobalExceptionHandler {
                 paramName, requiredTypeName, providedTypeName
         );
 
-        final ApiError body = createApiError(errorMessage, message);
+        final ErrorResponse body = createErrorResponse(errorMessage, message);
         return ResponseEntity.status(status).body(body);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ApiError> handleValidationExceptions(MethodArgumentNotValidException exception) {
+    public ResponseEntity<ErrorResponse> handleValidationExceptions(MethodArgumentNotValidException exception) {
         final Map<String, String> errors = new HashMap<>();
 
         exception.getBindingResult()
@@ -67,25 +68,25 @@ public class GlobalExceptionHandler {
 
         final ErrorMessage errorMessage = ErrorMessage.BAD_REQUEST;
         final HttpStatus status = ErrorMessage.getHttpStatus(errorMessage);
-        final ApiError body = new ApiError(errorMessage, errors.toString());
+        final ErrorResponse body = new ErrorResponse(errorMessage, errors.toString());
         return new ResponseEntity<>(body, status);
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ApiError> handleGenericException(Exception exception) {
+    public ResponseEntity<ErrorResponse> handleGenericException(Exception exception) {
         final ErrorMessage errorMessage = ErrorMessage.INTERNAL_SERVER_ERROR;
         final HttpStatus status = ErrorMessage.getHttpStatus(errorMessage);
-        final ApiError body = createApiError(errorMessage);
+        final ErrorResponse body = createErrorResponse(errorMessage);
         return ResponseEntity.status(status).body(body);
     }
 
-    private ApiError createApiError(ErrorMessage errorMessage) {
+    private ErrorResponse createErrorResponse(ErrorMessage errorMessage) {
         final String message = ErrorMessage.getMessage(errorMessage);
-        return new ApiError(errorMessage, message);
+        return new ErrorResponse(errorMessage, message);
     }
 
-    private ApiError createApiError(ErrorMessage errorMessage, String message) {
-        return new ApiError(errorMessage, message);
+    private ErrorResponse createErrorResponse(ErrorMessage errorMessage, String message) {
+        return new ErrorResponse(errorMessage, message);
     }
 
 }

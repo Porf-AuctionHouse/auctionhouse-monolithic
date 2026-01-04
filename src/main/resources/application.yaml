@@ -9,7 +9,7 @@ spring:
     ansi:
       enabled: ALWAYS
   datasource:
-    url: jdbc:postgresql://localhost:5432/ah_demo_db
+    url: jdbc:postgresql://localhost:5432/ah_mono_db
     username: postgres
     password: admin1234
   jpa:
