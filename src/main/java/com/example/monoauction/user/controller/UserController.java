@@ -1,67 +1,63 @@
 package com.example.monoauction.user.controller;
 
 
-import com.example.monoauction.common.execptions.AuctionHouseException;
+import com.example.monoauction.common.dto.ApiResponse;
+import com.example.monoauction.user.dto.AddBalanceRequest;
+import com.example.monoauction.user.dto.UpdateProfileRequest;
 import com.example.monoauction.user.model.User;
-import com.example.monoauction.common.enums.ErrorMessage;
 import com.example.monoauction.user.dto.UserResponse;
-import com.example.monoauction.user.repository.UserRepository;
+import com.example.monoauction.user.service.UserService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
-import java.util.stream.Collectors;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/users")
+@RequestMapping("/api/users")
+@CrossOrigin("*")
 @RequiredArgsConstructor
 public class UserController {
+    private final UserService userService;
 
-    @Autowired
-    private final UserRepository userRepository;
-
-
-    @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
-    public List<UserResponse> getAllUsers() {
-        List<User> users = userRepository.findAll();
-
-        return users.stream().map(user -> UserResponse.builder()
-                .id(user.getId())
-                .email(user.getEmail())
-                .role(user.getRole().toString())
-                .createdAt(user.getCreatedAt())
-                .updatedAt(user.getUpdatedAt())
-                .build())
-                .collect(Collectors.toList());
-    }
+//    @PostMapping("/register")
+//    public ResponseEntity<ApiResponse<UserResponse>> registerUser(
+//            @Valid @RequestBody RegisterRequest request){
+//
+//        User user = userService.registerUser(
+//                request.getEmail(),
+//                request.getPassword(),
+//                request.getFullName(),
+//                request.getRole()
+//        );
+//
+//        return ResponseEntity.status(HttpStatus.CREATED).body(
+//                ApiResponse.success("User registered successfully", new UserResponse(user))
+//        );
+//
+//    }
 
     @GetMapping("/{id}")
-    public UserResponse getUserById(@PathVariable Long id) {
-        User user = userRepository.findById(id).orElseThrow(() -> new AuctionHouseException(ErrorMessage.USER_NOT_FOUND));
-        return UserResponse.builder()
-                .id(user.getId())
-                .email(user.getEmail())
-                .role(user.getRole().toString())
-                .createdAt(user.getCreatedAt())
-                .updatedAt(user.getUpdatedAt())
-                .build();
+    public ResponseEntity<ApiResponse<UserResponse>> getUserById(@PathVariable Long id){
+        User user = userService.getUserById(id);
+
+        return ResponseEntity.ok(ApiResponse.success(new UserResponse(user)));
     }
 
-    @GetMapping("/email/{email}")
-    public UserResponse getUserByEmail(@PathVariable String email) {
-        User user = userRepository.findByEmail(email).orElseThrow(() -> new AuctionHouseException(ErrorMessage.USER_NOT_FOUND));
-        return UserResponse.builder()
-                .id(user.getId())
-                .email(user.getEmail())
-                .role(user.getRole().toString())
-                .createdAt(user.getCreatedAt())
-                .updatedAt(user.getUpdatedAt())
-                .build();
+    @PutMapping("/{id}")
+    public ResponseEntity<ApiResponse<UserResponse>> updateUser(
+            @PathVariable Long id,
+            @Valid @RequestBody UpdateProfileRequest request){
+        User user = userService.updateProfile(id, request.getFullName(), request.getPhoneNumber());
+        return ResponseEntity.ok(ApiResponse.success(
+                "Profile updated successfully",new UserResponse(user)));
+    }
+
+    @PostMapping("/{id}/balance")
+    public ResponseEntity<ApiResponse<UserResponse>> addBalance(
+            @PathVariable Long id,
+            @Valid @RequestBody AddBalanceRequest request) {
+        User user = userService.addBalance(id, request.getAmount());
+        return ResponseEntity.ok(ApiResponse.success(
+                "Balance added successfully", new UserResponse(user)));
     }
 }

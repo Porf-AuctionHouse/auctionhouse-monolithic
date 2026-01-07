@@ -27,5 +27,6 @@ public enum ItemCategory {
     AUTOMOBILES,
     WINE_AND_SPIRITS,
     REAL_ESTATE,
+    ELECTRONICS,
     MISCELLANEOUS
 }

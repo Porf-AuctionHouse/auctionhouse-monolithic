@@ -2,24 +2,19 @@ package com.example.monoauction.user.service;
 
 
 
-import com.example.monoauction.common.execptions.AuctionHouseException;
-import com.example.monoauction.user.dto.LoginRequest;
-import com.example.monoauction.user.dto.RegisterRequest;
-import com.example.monoauction.user.model.User;
-import com.example.monoauction.common.enums.ErrorMessage;
+import com.example.monoauction.common.enums.UserRole;
 import com.example.monoauction.user.dto.Token;
-import com.example.monoauction.user.repository.UserRepository;
+import com.example.monoauction.user.model.User;
 import com.example.monoauction.security.JwtTokenProvider;
 import io.jsonwebtoken.JwtException;
-import jakarta.validation.Valid;
+import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -32,7 +27,7 @@ import java.time.format.DateTimeFormatter;
 public class AuthService {
 
     @Autowired
-    private final UserRepository userRepository;
+    private final UserService userService;
 
     @Autowired
     private final PasswordEncoder passwordEncoder;
@@ -41,65 +36,48 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
 
     @Autowired
-    private final JwtTokenProvider jwtTokenProvider;
+    private final JwtTokenProvider tokenProvider;
 
-    public String register(RegisterRequest request) {
-        if (userRepository.existsByEmail(request.getEmail())) {
-            throw new AuctionHouseException(ErrorMessage.EMAIL_ALREADY_EXISTS);
-        }
-        User appUsers = User.builder()
-                .email(request.getEmail())
-                .password(passwordEncoder.encode(request.getPassword()))
-                .fullName(request.getFullName())
-                .phoneNumber(request.getPhoneNumber())
-                .role(request.getRole())
-                .build();
+    public Token login(String email, String password) {
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(email, password)
+        );
 
-        User savedUser = userRepository.save(appUsers);
+        SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        return "User registered successfully";
+        User user = userService.getUserByEmail(email);
+        return generateToken(user);
+
     }
 
-
-    public @Nullable Token login(@Valid LoginRequest loginRequest) {
-        User user = userRepository.findByEmail(loginRequest.getEmail()).orElseThrow(() -> new AuctionHouseException(ErrorMessage.USER_NOT_FOUND));
-        log.info("User found: {}", user);
-        try {
-            Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(
-                            loginRequest.getEmail(),
-                            loginRequest.getPassword()
-                    )
-            );
-            log.info("Authentication successful: {}", authentication);
-        } catch (AuthenticationException e) {
-            log.error("Authentication failed: {}", e.getMessage());
-            throw new AuctionHouseException(ErrorMessage.INVALID_CREDENTIALS);
-        }
-
-
-        return generateToken(loginRequest.getEmail());
+    public User register(String email, String password, String fullName, UserRole role) {
+        return userService.registerUser(email, password, fullName, role);
     }
 
-    public @Nullable Token refreshToken(String token) {
-        if(jwtTokenProvider.validateToken(token)){
-            String username = jwtTokenProvider.extractUsername(token);
-            return generateToken(username);
+    public User getUserByEmail(String email){
+        return userService.getUserByEmail(email);
+    }
+
+    public Token refreshToken(String token) {
+        if(tokenProvider.validateToken(token)){
+            Long userId = tokenProvider.getUserIdFromToken(token);
+            User user = userService.getUserById(userId);
+            return generateToken(user);
         }
         throw new JwtException("Invalid token");
     }
 
 
-    private Token generateToken(String username) {
+    private Token generateToken(User user) {
         LocalDateTime now = LocalDateTime.now();
-        LocalDateTime accessExpiry = now.plus(jwtTokenProvider.getAccessTokenExpirationInMillis(),
+        LocalDateTime accessExpiry = now.plus(tokenProvider.getAccessTokenExpirationInMillis(),
                 java.time.temporal.ChronoUnit.MILLIS);
-        LocalDateTime refreshExpiry = now.plus(jwtTokenProvider.getRefreshTokenExpirationInMillis(),
+        LocalDateTime refreshExpiry = now.plus(tokenProvider.getRefreshTokenExpirationInMillis(),
                 java.time.temporal.ChronoUnit.MILLIS);
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm a");
         return Token.builder()
-                .accessToken(jwtTokenProvider.generateAccessToken(username))
-                .refreshToken(jwtTokenProvider.generateRefreshToken(username))
+                .accessToken(tokenProvider.generateAccessToken(user))
+                .refreshToken(tokenProvider.generateRefreshToken(user))
                 .accessExpirationTime(accessExpiry.format(formatter))
                 .refreshExpirationTime(refreshExpiry.format(formatter))
                 .build();

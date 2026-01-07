@@ -7,6 +7,7 @@ public enum ItemStatus {
     APPROVED,          // Ready for auction
     REJECTED,          // Not accepted
     LIVE,              // Currently in auction
-    SOLD,              // Has winner
+    SOLD,
+    WITHDRAWN,
     UNSOLD             // No bids or reserve not met
 }

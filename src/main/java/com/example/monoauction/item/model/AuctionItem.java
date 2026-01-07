@@ -92,6 +92,9 @@ public class AuctionItem {
     private LocalDateTime auctionEndedAt;
     private LocalDateTime soldAt;
 
+    private boolean isDeleted;
+    private LocalDateTime withdrawnAt;
+
     @Version
     private Long version;
 

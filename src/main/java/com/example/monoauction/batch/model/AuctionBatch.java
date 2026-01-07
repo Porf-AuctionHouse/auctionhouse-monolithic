@@ -53,7 +53,7 @@ public class AuctionBatch {
     private LocalDateTime auctionStartTime;
 
     @Column(nullable = false)
-    private LocalDateTime auctionEndDate;
+    private LocalDateTime auctionEndTime;
 
     @Column(nullable = false)
     private Integer totalItemsSubmitted = 0;

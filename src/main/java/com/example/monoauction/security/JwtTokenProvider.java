@@ -1,66 +1,69 @@
 package com.example.monoauction.security;
 
 
+
 import com.example.monoauction.user.model.User;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.JwtException;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.security.SignatureException;
+import io.jsonwebtoken.*;
+import io.jsonwebtoken.security.SecurityException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import javax.crypto.spec.SecretKeySpec;
 import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Function;
 
-@Service
+@Slf4j
+@Component
 public class JwtTokenProvider {
 
     private final SecretKeySpec SECRET_KEY;
     private final long EXPIRATION_TIME;
     private final long REFRESH_EXPIRATION_TIME;
-    private final CustomUserDetailsService customUserDetailsService;
-
 
     public JwtTokenProvider(@Value("${jwt.secret}") String secretString,
                             @Value("${jwt.expiration}") long expiration,
-                            @Value("${jwt.refresh-expiration}") long refreshExpiration,
-                            CustomUserDetailsService customUserDetailsService) {
+                            @Value("${jwt.refresh-expiration}") long refreshExpiration) {
 
         this.SECRET_KEY = new SecretKeySpec(Base64.getDecoder().decode(secretString), Jwts.SIG.HS256.key().build().getAlgorithm());
         this.EXPIRATION_TIME = expiration;
         this.REFRESH_EXPIRATION_TIME = refreshExpiration;
-        this.customUserDetailsService = customUserDetailsService;
 
     }
 
-    public String generateAccessToken(String usernameOrEmail) {
-        User userDetails = customUserDetailsService.loadUserByUsername(usernameOrEmail);
+    public String generateAccessToken(User user) {
         Map<String, Object> claims = new HashMap<>();
-        claims.put("userId", userDetails.getId());
-        claims.put("role", userDetails.getAuthorities().iterator().next().getAuthority());
-        return createToken(claims, userDetails, EXPIRATION_TIME);
+        claims.put("email", user.getEmail());
+        claims.put("role", user.getRole().name());
+        return createToken(claims, user, EXPIRATION_TIME);
     }
 
-    public String generateRefreshToken(String usernameOrEmail) {
-        User userDetails = customUserDetailsService.loadUserByUsername(usernameOrEmail);
+    public String generateRefreshToken(User user) {
         Map<String, Object> claims = new HashMap<>();
-        return createToken(claims, userDetails, REFRESH_EXPIRATION_TIME);
+        return createToken(claims, user, REFRESH_EXPIRATION_TIME);
     }
 
-    private String createToken(Map<String, Object> claims, UserDetails userDetails, long expirationTime) {
+    private String createToken(Map<String, Object> claims, User user, long expirationTime) {
         return Jwts.builder()
+                .subject(user.getId().toString())
                 .claims(claims)
-                .subject(userDetails.getUsername())
                 .issuer("AuctionHouse")
                 .issuedAt(new Date(System.currentTimeMillis()))
                 .expiration(new Date(System.currentTimeMillis() + expirationTime))
                 .signWith(SECRET_KEY)
                 .compact();
+    }
+
+    public Long getUserIdFromToken(String token){
+        Claims claims = Jwts.parser()
+                .verifyWith(SECRET_KEY)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+
+        return Long.parseLong(claims.getSubject());
     }
 
     public long getAccessTokenExpirationInMillis() {
@@ -77,47 +80,20 @@ public class JwtTokenProvider {
                     .build()
                     .parseSignedClaims(token);
 
-            return !isTokenExpired(token);
+            return true;
 
-        } catch (SignatureException e) {
-            throw new JwtException("Invalid signature");
-        } catch (JwtException e) {
-            throw new JwtException("Invalid token");
+        } catch (SecurityException ex) {
+            log.error("Invalid JWT Signature");
+        } catch (MalformedJwtException ex) {
+            log.error("Invalid JWT Token");
+        } catch (ExpiredJwtException ex) {
+            log.error("Expired JWT Token");
+        } catch (UnsupportedJwtException ex) {
+            log.error("Unsupported JWT Token");
+        } catch (IllegalArgumentException ex) {
+            log.error("JWT Claims String Is Empty");
         }
-    }
-
-    private boolean isTokenExpired(String token) {
-        return extractExpiration(token).before(new Date());
-    }
-
-    public Date extractExpiration(String token) {
-        return extractClaims(token, Claims::getExpiration);
-    }
-
-
-    public <T> T extractClaims(String token, Function<Claims, T> claimsResolver) {
-        final Claims claims = extractAllClaims(token);
-        return claimsResolver.apply(claims);
-    }
-
-    private Claims extractAllClaims(String token) {
-        return Jwts.parser()
-                .verifyWith(SECRET_KEY)
-                .build()
-                .parseSignedClaims(token)
-                .getPayload();
-    }
-
-    public Claims getClaims(String token) {
-        return Jwts.parser()
-                .verifyWith(SECRET_KEY)
-                .build()
-                .parseSignedClaims(token)
-                .getPayload();
-    }
-
-    public String extractUsername(String token) {
-        return extractClaims(token, Claims::getSubject);
+        return false;
     }
 
 }

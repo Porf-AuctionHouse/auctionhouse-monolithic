@@ -1,10 +1,7 @@
 package com.example.monoauction.user.service;
 
-import com.example.monoauction.common.enums.ErrorMessage;
 import com.example.monoauction.common.enums.UserRole;
-import com.example.monoauction.common.execptions.AuctionHouseException;
-import com.example.monoauction.user.dto.RegisterRequest;
-import com.example.monoauction.user.dto.UserResponse;
+import com.example.monoauction.common.execptions.ResourceNotFoundException;
 import com.example.monoauction.user.model.User;
 import com.example.monoauction.user.repository.UserRepository;
 import jakarta.transaction.Transactional;
@@ -24,31 +21,31 @@ public class UserService {
 
     private final PasswordEncoder passwordEncoder;
 
-    public User registerUser(RegisterRequest request){
-        if(userRepository.existsByEmail(request.getEmail())){
-            throw new AuctionHouseException(ErrorMessage.EMAIL_ALREADY_EXISTS);
+    public User registerUser(String email, String password, String fullName, UserRole role) {
+        if (userRepository.existsByEmail(email)) {
+            throw new RuntimeException("Email Already In Use Plz Try Different Email");
         }
 
         User user = new User();
-        user.setEmail(request.getEmail());
-        user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setFullName(request.getFullName());
-        user.setRole(request.getRole());
+        user.setEmail(email);
+        user.setPassword(passwordEncoder.encode(password));
+        user.setFullName(fullName);
+        user.setRole(role);
         user.setIsVerified(false);
         user.setIsActive(true);
         user.setBalance(BigDecimal.ZERO);
-        return userRepository.save(user);
 
+        return userRepository.save(user);
     }
 
     public User getUserById(Long id){
         return userRepository.findById(id)
-                .orElseThrow(() -> new AuctionHouseException(ErrorMessage.USER_NOT_FOUND));
+                .orElseThrow(() -> new RuntimeException("User Not Found With These Details"));
     }
 
     public User getUserByEmail(String email){
         return userRepository.findByEmail(email)
-                .orElseThrow(() -> new AuctionHouseException(ErrorMessage.USER_NOT_FOUND));
+                .orElseThrow(() -> new ResourceNotFoundException("User Not Found With These Details"));
     }
 
     public User updateProfile(Long userId, String fullName, String phoneNumber){
@@ -73,7 +70,7 @@ public class UserService {
     public User deductBalance(Long userId, BigDecimal amount){
         User user = getUserById(userId);
         if(user.getBalance().compareTo(amount) < 0){
-            throw new AuctionHouseException(ErrorMessage.INSUFFICIENT_BALANCE);
+            throw new RuntimeException("Insufficient Balance");
         }
         user.setBalance(user.getBalance().subtract(amount));
         return userRepository.save(user);
