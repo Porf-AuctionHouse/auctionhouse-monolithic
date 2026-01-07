@@ -29,6 +29,14 @@ public class BatchController {
         return ResponseEntity.ok(ApiResponse.success(new BatchResponse(batch)));
     }
 
+    @PostMapping("/create-test-batch")
+    public ResponseEntity<ApiResponse<BatchResponse>> createTestBatch() {
+        AuctionBatch batch = batchService.createTestBatch();
+        return ResponseEntity.ok(ApiResponse.success(
+                "Test batch created - will transition in minutes",
+                new BatchResponse(batch)));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<BatchResponse>> getBatchById(@PathVariable Long id){
         AuctionBatch batch = batchService.getBatchById(id);

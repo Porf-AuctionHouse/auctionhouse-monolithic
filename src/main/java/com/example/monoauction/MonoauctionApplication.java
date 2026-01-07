@@ -12,38 +12,14 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
-@EnableJpaAuditing
+@EnableScheduling
 public class MonoauctionApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(MonoauctionApplication.class, args);
 	}
 
-//    @Bean
-//    CommandLineRunner testRepositories(
-//            UserRepository userRepository,
-//            AuctionBatchRepository batchRepository,
-//            AuctionItemRepository itemRepository,
-//            BidRepository bidRepository,
-//            NotificationRepository notificationRepository,
-//            TransactionRepository transactionRepository,
-//            WatchlistRepository watchlistRepository
-//    ) {
-//        return args -> {
-//
-//            System.out.println("=== Testing Repositories ===");
-//
-//            System.out.println("Users: " + userRepository.count());
-//            System.out.println("Batch: " + batchRepository.count());
-//            System.out.println("Items: " + itemRepository.count());
-//            System.out.println("Bids: " + bidRepository.count());
-//            System.out.println("Transactions: " + transactionRepository.count());
-//            System.out.println("Watchlist: " + watchlistRepository.count());
-//
-//            System.out.println("=== End of Testing ===");
-//
-//        };
-//    }
 }

@@ -65,6 +65,33 @@ public class AuctionBatchService {
 
     }
 
+    public AuctionBatch createTestBatch(){
+        LocalDateTime now = LocalDateTime.now();
+
+        AuctionBatch batch = new AuctionBatch();
+        batch.setBatchCode("TEST-BATCH-" + System.currentTimeMillis());
+        batch.setWeekNumber(1);
+        batch.setYear(now.getYear());
+        batch.setStatus(BatchStatus.SUBMISSION);
+
+        batch.setSubmissionStartDate(now.minusMinutes(10));
+        batch.setSubmissionEndDate(now.plusMinutes(5));
+
+        batch.setReviewStartDate(now.plusMinutes(6));
+        batch.setReviewEndDate(now.plusMinutes(10));
+
+        batch.setAuctionStartTime(now.plusMinutes(11));
+        batch.setAuctionEndTime(now.plusMinutes(15));
+
+        batch.setTotalItemsSubmitted(0);
+        batch.setTotalItemsApproved(0);
+        batch.setTotalItemsRejected(0);
+        batch.setTotalItemsSold(0);
+        batch.setTotalRevenue(BigDecimal.ZERO);
+
+        return batchRepository.save(batch);
+    }
+
     public AuctionBatch getBatchById(Long batchId){
         return batchRepository.findById(batchId).orElseThrow(
                 () -> new RuntimeException("Batch Not Found With These Details"));
