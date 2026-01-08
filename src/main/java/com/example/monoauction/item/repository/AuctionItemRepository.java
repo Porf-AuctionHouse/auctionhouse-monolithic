@@ -29,4 +29,5 @@ public interface AuctionItemRepository extends JpaRepository<AuctionItem, Long> 
 
     List<AuctionItem> findByTitleContainingIgnoreCaseAndStatus(String title, ItemStatus status);
 
+    List<AuctionItem> findByWinnerIdOrderByCreatedAtDesc(Long winnerId);
 }
