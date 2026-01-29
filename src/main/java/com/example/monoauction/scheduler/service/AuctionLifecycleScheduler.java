@@ -47,6 +47,9 @@ public class AuctionLifecycleScheduler {
             AuctionBatch currentBatch = batchService.getCurrentBatch();
             LocalDateTime now = LocalDateTime.now();
 
+            webSocketService.sendAuctionStatusUpdate(currentBatch,
+                    "Checking Batch Status");
+
             log.info("Check Batch Status. Current: {}, Time: {}",
                     currentBatch.getStatus(), now);
 

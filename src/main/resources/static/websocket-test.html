@@ -1,176 +1,1264 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>WebSocket Test</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Tester</title>
     <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
+        :root {
+            --primary-color: #4a6fa5;
+            --secondary-color: #6c757d;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+            --warning-color: #ffc107;
+            --light-bg: #f8f9fa;
+            --dark-bg: #343a40;
+            --light-text: #f8f9fa;
+            --dark-text: #212529;
+            --border-color: #dee2e6;
+            --card-bg: #ffffff;
+            --message-bg: #f8f9fa;
+        }
+
+        [data-theme="dark"] {
+            --light-bg: #1a1a1a;
+            --dark-bg: #f8f9fa;
+            --light-text: #212529;
+            --dark-text: #f8f9fa;
+            --border-color: #495057;
+            --card-bg: #2d2d2d;
+            --message-bg: #3d3d3d;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
         body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 50px auto;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--dark-text);
+            background-color: var(--light-bg);
+            transition: all 0.3s ease;
             padding: 20px;
         }
-        .section {
-            margin: 20px 0;
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
             padding: 20px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
         }
-        .message {
-            padding: 10px;
-            margin: 5px 0;
-            background: #f0f0f0;
-            border-radius: 3px;
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
         }
-        .bid-message {
-            background: #e3f2fd;
+
+        .header h1 {
+            color: var(--primary-color);
         }
-        .status-message {
-            background: #fff3e0;
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            overflow: hidden;
+            transition: all 0.3s ease;
         }
-        button {
-            padding: 10px 20px;
-            margin: 5px;
-            background: #007bff;
+
+        .card-header {
+            background-color: var(--primary-color);
             color: white;
-            border: none;
-            border-radius: 3px;
+            padding: 15px 20px;
             cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
-        button:hover {
-            background: #0056b3;
+
+        .card-body {
+            padding: 20px;
         }
-        .connected {
-            color: green;
+
+        .form-group {
+            margin-bottom: 15px;
         }
-        .disconnected {
-            color: red;
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
         }
-        input {
-            padding: 8px;
-            margin: 5px;
-            width: 100px;
+
+        input[type="text"],
+        input[type="number"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background-color: var(--light-bg);
+            color: var(--dark-text);
+            font-family: inherit;
+            font-size: 14px;
+        }
+
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-right: 10px;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .btn i {
+            margin-right: 5px;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-success {
+            background-color: var(--success-color);
+            color: white;
+        }
+
+        .btn-danger {
+            background-color: var(--danger-color);
+            color: white;
+        }
+
+        .btn-warning {
+            background-color: var(--warning-color);
+            color: var(--dark-text);
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            border: 1px solid var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+
+        .status-connected {
+            background-color: var(--success-color);
+        }
+
+        .status-disconnected {
+            background-color: var(--danger-color);
+        }
+
+        .status-connecting {
+            background-color: var(--warning-color);
+        }
+
+        .message {
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 6px;
+            background-color: var(--message-bg);
+            border-left: 4px solid var(--primary-color);
+            transition: all 0.3s ease;
+        }
+
+        .message-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .message-time {
+            font-size: 0.8em;
+            color: var(--secondary-color);
+        }
+
+        .message-content {
+            white-space: pre-wrap;
+            font-family: 'Courier New', Courier, monospace;
+            overflow-x: auto;
+            font-size: 13px;
+            line-height: 1.4;
+        }
+
+        .message-system {
+            border-left-color: var(--secondary-color);
+        }
+
+        .message-bid {
+            border-left-color: var(--success-color);
+        }
+
+        .message-error {
+            border-left-color: var(--danger-color);
+        }
+
+        .message-warning {
+            border-left-color: var(--warning-color);
+        }
+
+        .filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .filter-group {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: var(--card-bg);
+            border-radius: 4px;
+            font-size: 0.9em;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 5px 10px;
+            flex: 1;
+            min-width: 100px;
+        }
+
+        .stat-value {
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+
+        .stat-label {
+            font-size: 0.8em;
+            color: var(--secondary-color);
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+            margin-left: 10px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--primary-color);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
+        .theme-toggle {
+            display: flex;
+            align-items: center;
+        }
+
+        .theme-toggle i {
+            margin: 0 5px;
+        }
+
+        .subscription-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background-color: var(--light-bg);
+            border-radius: 4px;
+            margin-bottom: 5px;
+        }
+
+        .subscription-actions {
+            display: flex;
+            gap: 5px;
+        }
+
+        .subscription-actions button {
+            padding: 2px 8px;
+            font-size: 12px;
+            margin: 0;
+        }
+
+        @media (max-width: 768px) {
+            .filters {
+                flex-direction: column;
+            }
+            
+            .filter-group {
+                width: 100%;
+            }
+            
+            .toolbar {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+
+            .stat-item {
+                min-width: calc(50% - 10px);
+            }
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--light-bg);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--secondary-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-color);
+        }
+
+        .text-muted {
+            color: var(--secondary-color);
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .mt-2 {
+            margin-top: 10px;
+        }
+
+        .mt-3 {
+            margin-top: 15px;
+        }
+
+        .mb-2 {
+            margin-bottom: 10px;
+        }
+
+        .mb-3 {
+            margin-bottom: 15px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .input-group input {
+            flex: 1;
         }
     </style>
 </head>
 <body>
-<h1>Auction WebSocket Test</h1>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-broadcast-tower"></i> WebSocket Tester</h1>
+            <div class="theme-toggle">
+                <i class="fas fa-sun"></i>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="themeToggle">
+                    <span class="slider"></span>
+                </label>
+                <i class="fas fa-moon"></i>
+            </div>
+        </div>
 
-<div class="section">
-    <h3>Connection Status: <span id="status" class="disconnected">Disconnected</span></h3>
-    <button onclick="connect()">Connect</button>
-    <button onclick="disconnect()">Disconnect</button>
-</div>
+        <div class="card">
+            <div class="card-header" id="connectionHeader">
+                <span><i class="fas fa-plug"></i> Connection</span>
+                <span id="connectionStatus">
+                    <span class="status-indicator status-disconnected"></span>
+                    <span>Disconnected</span>
+                </span>
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label for="websocketUrl">WebSocket URL</label>
+                    <input type="text" id="websocketUrl" value="/ws" placeholder="Enter WebSocket URL">
+                </div>
+                <div class="form-group">
+                    <label for="connectionHeaders">Connection Headers (JSON)</label>
+                    <textarea id="connectionHeaders" class="form-control" rows="3" placeholder='{"X-Client-Id": "web-client-1"}'>{
+    "X-Client-Id": "web-client-1"
+}</textarea>
+                </div>
+                <div class="toolbar">
+                    <div>
+                        <button id="connectBtn" class="btn btn-success"><i class="fas fa-plug"></i> Connect</button>
+                        <button id="disconnectBtn" class="btn btn-danger" disabled><i class="fas fa-power-off"></i> Disconnect</button>
+                    </div>
+                    <div>
+                        <button id="clearMessagesBtn" class="btn btn-outline"><i class="fas fa-trash"></i> Clear Messages</button>
+                        <button id="exportMessagesBtn" class="btn btn-outline"><i class="fas fa-file-export"></i> Export</button>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-<div class="section">
-    <h3>Subscribe to Topics</h3>
-    <label>Item ID:</label>
-    <input type="number" id="itemId" value="1" />
-    <button onclick="subscribeToItem()">Subscribe to Item</button>
-    <button onclick="subscribeToAuction()">Subscribe to Auction Updates</button>
-</div>
+        <div class="card">
+            <div class="card-header" id="subscriptionHeader">
+                <span><i class="fas fa-rss"></i> Subscriptions</span>
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label for="topic">Topic</label>
+                    <div class="input-group">
+                        <input type="text" id="topic" class="form-control" placeholder="e.g., /topic/auction/1">
+                        <button id="subscribeBtn" class="btn btn-primary" disabled><i class="fas fa-plus"></i> Subscribe</button>
+                    </div>
+                    <div class="mt-2">
+                        <small class="text-muted">Common topics: </small>
+                        <button class="btn btn-sm btn-outline" onclick="document.getElementById('topic').value = '/topic/auction/1'">/topic/auction/1</button>
+                        <button class="btn btn-sm btn-outline" onclick="document.getElementById('topic').value = '/topic/updates'">/topic/updates</button>
+                    </div>
+                </div>
+                <div id="subscriptionsList" class="mt-3">
+                    <p class="text-muted">No active subscriptions</p>
+                </div>
+            </div>
+        </div>
 
+        <div class="card">
+            <div class="card-header" id="messagesHeader">
+                <span><i class="fas fa-envelope"></i> Messages</span>
+                <span id="messageCount">0 messages</span>
+            </div>
+            <div class="card-body">
+                <div class="filters">
+                    <div class="filter-group">
+                        <label for="searchFilter">Search</label>
+                        <input type="text" id="searchFilter" placeholder="Filter messages...">
+                    </div>
+                    <div class="filter-group">
+                        <label for="typeFilter">Message Type</label>
+                        <select id="typeFilter">
+                            <option value="all">All Types</option>
+                            <option value="system">System</option>
+                            <option value="bid">Bid</option>
+                            <option value="error">Error</option>
+                            <option value="warning">Warning</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="autoScroll">
+                            <input type="checkbox" id="autoScroll" checked> Auto-scroll
+                        </label>
+                    </div>
+                </div>
 
-<div class="section">
-    <h3>Received Messages</h3>
-    <div id="messages"></div>
-</div>
+                <div class="stats">
+                    <div class="stat-item">
+                        <div class="stat-value" id="totalMessages">0</div>
+                        <div class="stat-label">Total</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="systemMessages">0</div>
+                        <div class="stat-label">System</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="bidMessages">0</div>
+                        <div class="stat-label">Bids</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="errorMessages">0</div>
+                        <div class="stat-label">Errors</div>
+                    </div>
+                </div>
+
+                <div id="messages" style="max-height: 500px; overflow-y: auto; padding: 10px; border: 1px solid var(--border-color); border-radius: 4px;">
+                    <p class="text-muted text-center">No messages received yet</p>
+                </div>
+            </div>
+        </div>
+    </div>
 
 <script>
+    // Global variables
     let stompClient = null;
+    let reconnectAttempts = 0;
+    const maxReconnectAttempts = 5;
+    const reconnectDelay = 3000; // 3 seconds
+    let reconnectTimeout = null;
+    let subscriptions = new Map();
+    let messageCounters = {
+        total: 0,
+        system: 0,
+        bid: 0,
+        error: 0,
+        warning: 0
+    };
+    let autoScrollEnabled = true;
+    let isConnected = false;
+    let messageHistory = [];
 
-function connect() {
-    // Clear previous connection if any
-    if (stompClient !== null) {
-        stompClient.disconnect();
+    // DOM Elements
+    const connectBtn = document.getElementById('connectBtn');
+    const disconnectBtn = document.getElementById('disconnectBtn');
+    const subscribeBtn = document.getElementById('subscribeBtn');
+    const clearMessagesBtn = document.getElementById('clearMessagesBtn');
+    const exportMessagesBtn = document.getElementById('exportMessagesBtn');
+    const websocketUrlInput = document.getElementById('websocketUrl');
+    const connectionHeadersInput = document.getElementById('connectionHeaders');
+    const topicInput = document.getElementById('topic');
+    const searchFilter = document.getElementById('searchFilter');
+    const typeFilter = document.getElementById('typeFilter');
+    const autoScrollToggle = document.getElementById('autoScroll');
+    const messagesContainer = document.getElementById('messages');
+    const subscriptionsList = document.getElementById('subscriptionsList');
+    const messageCountElement = document.getElementById('messageCount');
+    const themeToggle = document.getElementById('themeToggle');
+
+    // Counter elements
+    const totalMessagesElement = document.getElementById('totalMessages');
+    const systemMessagesElement = document.getElementById('systemMessages');
+    const bidMessagesElement = document.getElementById('bidMessages');
+    const errorMessagesElement = document.getElementById('errorMessages');
+
+    // Initialize the application
+    function init() {
+        loadSettings();
+        setupEventListeners();
+        updateUI();
     }
 
-    // Use relative URL
-    const socket = new SockJS('/ws');
-    stompClient = Stomp.over(socket);
-
-    // Enable debug logging
-    stompClient.debug = function(str) {
-        console.log('STOMP: ' + str);
-    };
-
-    const headers = {};
-
-    stompClient.connect(headers,
-        function(frame) {
-            console.log('Connected: ' + frame);
-            document.getElementById('status').textContent = 'Connected';
-            document.getElementById('status').className = 'connected';
-            addMessage('System', 'Connected to WebSocket server', 'status-message');
-
-            // Auto-subscribe after connection
-            subscribeToAuction();
-        },
-        function(error) {
-            console.error('STOMP protocol error: ', error);
-            document.getElementById('status').textContent = 'Connection Error - See Console';
-            document.getElementById('status').className = 'disconnected';
-            addMessage('System', 'Connection error: ' + error, 'status-message');
+    // Load saved settings from localStorage
+    function loadSettings() {
+        // Load theme preference
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            themeToggle.checked = true;
         }
-    );
-}
 
+        // Load WebSocket URL
+        const savedUrl = localStorage.getItem('websocketUrl');
+        if (savedUrl) {
+            websocketUrlInput.value = savedUrl;
+        }
+
+        // Load connection headers
+        const savedHeaders = localStorage.getItem('connectionHeaders');
+        if (savedHeaders) {
+            connectionHeadersInput.value = savedHeaders;
+        }
+
+        // Load auto-scroll preference
+        autoScrollEnabled = localStorage.getItem('autoScroll') !== 'false';
+        autoScrollToggle.checked = autoScrollEnabled;
+
+        // Auto-connect if previously connected
+        if (localStorage.getItem('autoConnect') === 'true') {
+            setTimeout(connect, 500); // Small delay to ensure UI is ready
+        }
+    }
+
+    // Save settings to localStorage
+    function saveSettings() {
+        localStorage.setItem('theme', themeToggle.checked ? 'dark' : 'light');
+        localStorage.setItem('websocketUrl', websocketUrlInput.value);
+        localStorage.setItem('connectionHeaders', connectionHeadersInput.value);
+        localStorage.setItem('autoScroll', autoScrollEnabled);
+    }
+
+    // Set up event listeners
+    function setupEventListeners() {
+        // Connection buttons
+        connectBtn.addEventListener('click', connect);
+        disconnectBtn.addEventListener('click', disconnect);
+        
+        // Subscription buttons
+        subscribeBtn.addEventListener('click', subscribeToTopic);
+        topicInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') subscribeToTopic();
+        });
+        
+        // Message controls
+        clearMessagesBtn.addEventListener('click', clearMessages);
+        exportMessagesBtn.addEventListener('click', exportMessages);
+        
+        // Filters
+        searchFilter.addEventListener('input', filterMessages);
+        typeFilter.addEventListener('change', filterMessages);
+        autoScrollToggle.addEventListener('change', (e) => {
+            autoScrollEnabled = e.target.checked;
+            saveSettings();
+        });
+        
+        // Theme toggle
+        themeToggle.addEventListener('change', toggleTheme);
+        
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            if (autoScrollEnabled) {
+                scrollToBottom();
+            }
+        });
+
+        // Handle beforeunload to clean up
+        window.addEventListener('beforeunload', () => {
+            if (isConnected) {
+                localStorage.setItem('autoConnect', 'true');
+            } else {
+                localStorage.removeItem('autoConnect');
+            }
+        });
+    }
+
+    // Toggle between light and dark theme
+    function toggleTheme() {
+        if (themeToggle.checked) {
+            document.documentElement.setAttribute('data-theme', 'dark');
+        } else {
+            document.documentElement.removeAttribute('data-theme');
+        }
+        saveSettings();
+    }
+
+    // Connect to WebSocket server
+    function connect() {
+        if (isConnected) {
+            addMessage('System', 'Already connected to WebSocket server', 'system');
+            return;
+        }
+
+        const url = websocketUrlInput.value.trim();
+        if (!url) {
+            addMessage('Error', 'WebSocket URL is required', 'error');
+            return;
+        }
+
+        // Save settings
+        saveSettings();
+        
+        // Show connecting state
+        updateConnectionStatus('connecting');
+        addMessage('System', 'Connecting to WebSocket server...', 'system');
+
+        try {
+            // Parse headers if provided
+            let headers = {};
+            try {
+                headers = JSON.parse(connectionHeadersInput.value || '{}');
+            } catch (e) {
+                console.error('Failed to parse connection headers:', e);
+                addMessage('Error', 'Invalid connection headers JSON', 'error');
+                return;
+            }
+
+            // Create WebSocket connection
+            const socket = new SockJS(url);
+            stompClient = Stomp.over(socket);
+            
+            // Configure STOMP client
+            stompClient.debug = (str) => {
+                console.log('STOMP: ' + str);
+            };
+            
+            // Connect to the STOMP server
+            stompClient.connect(
+                headers,
+                () => onConnectSuccess(),
+                (error) => onConnectError(error)
+            );
+            
+        } catch (error) {
+            console.error('Error connecting to WebSocket:', error);
+            addMessage('Error', 'Failed to connect: ' + error.message, 'error');
+            updateConnectionStatus('disconnected');
+        }
+    }
+
+    // Handle successful WebSocket connection
+    function onConnectSuccess() {
+        console.log('Connected to WebSocket server');
+        isConnected = true;
+        reconnectAttempts = 0;
+        updateConnectionStatus('connected');
+        addMessage('System', 'Successfully connected to WebSocket server', 'system');
+        
+        // Enable subscription button
+        subscribeBtn.disabled = false;
+        
+        // Auto-subscribe to the auction topic
+        subscribeToTopic('/topic/auction/1');
+        
+        // Resubscribe to previous topics if reconnecting
+        if (subscriptions.size > 0) {
+            addMessage('System', 'Re-subscribing to previous topics...', 'system');
+            const previousSubscriptions = new Map(subscriptions);
+            subscriptions.clear();
+            previousSubscriptions.forEach((_, topic) => {
+                if (topic !== '/topic/auction/1') { // Don't resubscribe to auction topic as we already did that
+                    subscribeToTopic(topic);
+                }
+            });
+        }
+        
+        // Set up heartbeat monitoring
+        startHeartbeat();
+    }
+
+    // Handle WebSocket connection error
+    function onConnectError(error) {
+        console.error('STOMP protocol error:', error);
+        isConnected = false;
+        updateConnectionStatus('disconnected');
+        
+        // Only show error if not already reconnecting
+        if (reconnectAttempts === 0) {
+            addMessage('Error', 'Connection error: ' + (error.message || 'Unknown error'), 'error');
+        }
+        
+        // Attempt to reconnect if this wasn't a manual disconnect
+        if (reconnectTimeout === null) {
+            attemptReconnect();
+        }
+    }
+
+    // Attempt to reconnect to the WebSocket server
+    function attemptReconnect() {
+        if (reconnectAttempts >= maxReconnectAttempts) {
+            addMessage('Error', 'Max reconnection attempts reached. Please check your connection and try again.', 'error');
+            return;
+        }
+        
+        reconnectAttempts++;
+        const delay = Math.min(reconnectDelay * Math.pow(1.5, reconnectAttempts - 1), 30000); // Cap at 30s
+        
+        updateConnectionStatus('connecting');
+        addMessage('System', `Attempting to reconnect (${reconnectAttempts}/${maxReconnectAttempts}) in ${delay/1000} seconds...`, 'system');
+        
+        reconnectTimeout = setTimeout(() => {
+            reconnectTimeout = null;
+            if (!isConnected) {
+                connect();
+            }
+        }, delay);
+    }
+
+    // Start heartbeat monitoring
+    function startHeartbeat() {
+        // STOMP 1.2+ has built-in heartbeat support
+        // We can also implement our own if needed
+    }
+
+    // Disconnect from WebSocket server
     function disconnect() {
-        if (stompClient !== null) {
-            stompClient.disconnect();
-            document.getElementById('status').textContent = 'Disconnected';
-            document.getElementById('status').className = 'disconnected';
-            addMessage('System', 'Disconnected from WebSocket server', 'status-message');
+        if (stompClient && isConnected) {
+            try {
+                // Unsubscribe from all topics
+                subscriptions.forEach((subscription, topic) => {
+                    try {
+                        subscription.unsubscribe();
+                    } catch (e) {
+                        console.error(`Error unsubscribing from ${topic}:`, e);
+                    }
+                });
+                subscriptions.clear();
+                
+                // Disconnect from the server
+                stompClient.disconnect(
+                    () => {
+                        console.log('Disconnected from WebSocket server');
+                        onDisconnect();
+                    },
+                    { force: true }
+                );
+            } catch (error) {
+                console.error('Error disconnecting:', error);
+                onDisconnect();
+            }
+        } else {
+            onDisconnect();
         }
     }
 
-    function subscribeToItem() {
-        const itemId = document.getElementById('itemId').value;
+    // Handle WebSocket disconnection
+    function onDisconnect() {
+        isConnected = false;
+        updateConnectionStatus('disconnected');
+        addMessage('System', 'Disconnected from WebSocket server', 'system');
+        
+        // Clear any pending reconnection attempts
+        if (reconnectTimeout) {
+            clearTimeout(reconnectTimeout);
+            reconnectTimeout = null;
+        }
+        
+        // Disable subscription button
+        subscribeBtn.disabled = true;
+    }
 
-        if (stompClient === null || !stompClient.connected) {
-            alert('Please connect first!');
+    // Subscribe to a topic
+    function subscribeToTopic(topic = null) {
+        if (!isConnected || !stompClient) {
+            addMessage('Error', 'Not connected to WebSocket server', 'error');
             return;
         }
-
-        // Subscribe to item bid updates
-        stompClient.subscribe('/topic/item/' + itemId, function(message) {
-            const data = JSON.parse(message.body);
-            addMessage('Bid Update', JSON.stringify(data, null, 2), 'bid-message');
-        });
-
-        addMessage('System', 'Subscribed to item ' + itemId, 'status-message');
-    }
-
-    function subscribeToAuction() {
-        if (stompClient === null || !stompClient.connected) {
-            alert('Please connect first!');
+        
+        const topicToSubscribe = topic || topicInput.value.trim();
+        
+        if (!topicToSubscribe) {
+            addMessage('Error', 'Please enter a topic to subscribe to', 'error');
             return;
         }
+        
+        // Check if already subscribed
+        if (subscriptions.has(topicToSubscribe) && !topic) {
+            addMessage('Warning', `Already subscribed to ${topicToSubscribe}`, 'warning');
+            return;
+        }
+        
+        try {
+            // Subscribe to the topic
+            const subscription = stompClient.subscribe(topicToSubscribe, (message) => {
+                try {
+                    const data = JSON.parse(message.body);
+                    // Use 'bid' type for auction topics, 'system' for others
+                    const messageType = (topicToSubscribe.includes('auction') || topicToSubscribe.includes('bid')) ? 'bid' : 'system';
+                    addMessage(
+                        `Message from ${topicToSubscribe}`, 
+                        JSON.stringify(data, null, 2), 
+                        messageType
+                    );
+                } catch (e) {
+                    // If JSON parsing fails, display the raw message
+                    addMessage(
+                        `Message from ${topicToSubscribe}`, 
+                        message.body, 
+                        'system'
+                    );
+                }
+            });
+            
+            // Store the subscription
+            subscriptions.set(topicToSubscribe, subscription);
+            
+            // Update UI
+            updateSubscriptionsList();
+            
+            if (!topic) {
+                addMessage('System', `Subscribed to ${topicToSubscribe}`, 'system');
+                topicInput.value = ''; // Clear the input
+            }
+            
+            // Log subscription for debugging
+            console.log(`Subscribed to ${topicToSubscribe}`);
+            
+        } catch (error) {
+            console.error('Error subscribing to topic:', error);
+            addMessage('Error', `Failed to subscribe to ${topicToSubscribe}: ${error.message}`, 'error');
+        }
+    }
 
-        // Subscribe to auction-wide updates
-        stompClient.subscribe('/topic/auction', function(message) {
-            const data = JSON.parse(message.body);
-            addMessage('Auction Update', JSON.stringify(data, null, 2), 'status-message');
+    // Unsubscribe from a topic
+    function unsubscribeFromTopic(topic) {
+        if (!subscriptions.has(topic)) {
+            return;
+        }
+        
+        try {
+            const subscription = subscriptions.get(topic);
+            subscription.unsubscribe();
+            subscriptions.delete(topic);
+            
+            updateSubscriptionsList();
+            addMessage('System', `Unsubscribed from ${topic}`, 'system');
+            
+        } catch (error) {
+            console.error('Error unsubscribing from topic:', error);
+            addMessage('Error', `Failed to unsubscribe from ${topic}: ${error.message}`, 'error');
+        }
+    }
+
+    // Update the subscriptions list in the UI
+    function updateSubscriptionsList() {
+        if (subscriptions.size === 0) {
+            subscriptionsList.innerHTML = '<p class="text-muted">No active subscriptions</p>';
+            return;
+        }
+        
+        const list = document.createElement('div');
+        list.className = 'subscriptions-container';
+        
+        subscriptions.forEach((_, topic) => {
+            const item = document.createElement('div');
+            item.className = 'subscription-item';
+            
+            const topicSpan = document.createElement('span');
+            topicSpan.textContent = topic;
+            
+            const actions = document.createElement('div');
+            actions.className = 'subscription-actions';
+            
+            const unsubscribeBtn = document.createElement('button');
+            unsubscribeBtn.className = 'btn btn-sm btn-outline';
+            unsubscribeBtn.innerHTML = '<i class="fas fa-times"></i>';
+            unsubscribeBtn.title = 'Unsubscribe';
+            unsubscribeBtn.onclick = () => unsubscribeFromTopic(topic);
+            
+            actions.appendChild(unsubscribeBtn);
+            item.appendChild(topicSpan);
+            item.appendChild(actions);
+            list.appendChild(item);
         });
-
-        addMessage('System', 'Subscribed to auction updates', 'status-message');
+        
+        subscriptionsList.innerHTML = '';
+        subscriptionsList.appendChild(list);
     }
 
-    function addMessage(title, content, className) {
-        const messagesDiv = document.getElementById('messages');
-        const messageDiv = document.createElement('div');
-        messageDiv.className = 'message ' + className;
-        messageDiv.innerHTML = '<strong>' + title + ':</strong><br>' +
-                               '<pre>' + content + '</pre>' +
-                               '<small>' + new Date().toLocaleTimeString() + '</small>';
-        messagesDiv.insertBefore(messageDiv, messagesDiv.firstChild);
+    // Add a message to the message list
+    function addMessage(title, content, type = 'system') {
+        // Create message object
+        const message = {
+            id: Date.now(),
+            timestamp: new Date(),
+            title,
+            content,
+            type
+        };
+        
+        // Add to history
+        messageHistory.unshift(message);
+        
+        // Update counters
+        updateMessageCounters(type, 1);
+        
+        // Update UI
+        updateMessageDisplay();
+        
+        // Auto-scroll if enabled
+        if (autoScrollEnabled) {
+            scrollToBottom();
+        }
     }
 
-    // Auto-connect on page load
-    window.onload = function() {
-        connect();
-    };
+    // Update message counters
+    function updateMessageCounters(type, increment = 1) {
+        messageCounters.total += increment;
+        
+        switch (type) {
+            case 'system':
+                messageCounters.system += increment;
+                break;
+            case 'bid':
+                messageCounters.bid += increment;
+                break;
+            case 'error':
+                messageCounters.error += increment;
+                break;
+            case 'warning':
+                messageCounters.warning += increment;
+                break;
+        }
+        
+        // Update counter displays
+        updateCounterDisplays();
+    }
+
+    // Update counter displays
+    function updateCounterDisplays() {
+        totalMessagesElement.textContent = messageCounters.total;
+        systemMessagesElement.textContent = messageCounters.system;
+        bidMessagesElement.textContent = messageCounters.bid;
+        errorMessagesElement.textContent = messageCounters.error;
+        
+        // Update message count in header
+        const total = messageCounters.total;
+        messageCountElement.textContent = `${total} message${total !== 1 ? 's' : ''}`;
+    }
+
+    // Update the message display based on filters
+    function updateMessageDisplay() {
+        const searchTerm = searchFilter.value.toLowerCase();
+        const filterType = typeFilter.value;
+        
+        // Filter messages
+        const filteredMessages = messageHistory.filter(message => {
+            // Filter by type
+            if (filterType !== 'all' && message.type !== filterType) {
+                return false;
+            }
+            
+            // Filter by search term
+            if (searchTerm) {
+                const searchContent = `${message.title} ${message.content}`.toLowerCase();
+                if (!searchContent.includes(searchTerm)) {
+                    return false;
+                }
+            }
+            
+            return true;
+        });
+        
+        // Clear current messages
+        messagesContainer.innerHTML = '';
+        
+        // Add filtered messages
+        if (filteredMessages.length === 0) {
+            const noMessages = document.createElement('p');
+            noMessages.className = 'text-muted text-center';
+            noMessages.textContent = 'No messages match the current filters';
+            messagesContainer.appendChild(noMessages);
+            return;
+        }
+        
+        filteredMessages.forEach(message => {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message message-${message.type}`;
+            
+            const header = document.createElement('div');
+            header.className = 'message-header';
+            
+            const title = document.createElement('strong');
+            title.textContent = message.title;
+            
+            const time = document.createElement('span');
+            time.className = 'message-time';
+            time.textContent = formatTime(message.timestamp);
+            
+            const content = document.createElement('div');
+            content.className = 'message-content';
+            content.textContent = message.content;
+            
+            header.appendChild(title);
+            header.appendChild(time);
+            
+            messageDiv.appendChild(header);
+            messageDiv.appendChild(content);
+            
+            messagesContainer.appendChild(messageDiv);
+        });
+    }
+
+    // Filter messages based on search and type filters
+    function filterMessages() {
+        updateMessageDisplay();
+    }
+
+    // Clear all messages
+    function clearMessages() {
+        if (messageHistory.length === 0) {
+            return;
+        }
+        
+        if (confirm('Are you sure you want to clear all messages?')) {
+            messageHistory = [];
+            messageCounters = {
+                total: 0,
+                system: 0,
+                bid: 0,
+                error: 0,
+                warning: 0
+            };
+            
+            updateCounterDisplays();
+            updateMessageDisplay();
+            
+            addMessage('System', 'All messages cleared', 'system');
+        }
+    }
+
+    // Export messages to JSON or CSV
+    function exportMessages() {
+        if (messageHistory.length === 0) {
+            addMessage('Error', 'No messages to export', 'error');
+            return;
+        }
+        
+        const format = prompt('Export format (json or csv):', 'json').toLowerCase();
+        
+        if (format !== 'json' && format !== 'csv') {
+            addMessage('Error', 'Invalid format. Please use "json" or "csv"', 'error');
+            return;
+        }
+        
+        try {
+            let content = '';
+            const filename = `websocket-messages-${new Date().toISOString().replace(/[:.]/g, '-')}.${format}`;
+            
+            if (format === 'json') {
+                content = JSON.stringify(messageHistory, null, 2);
+            } else {
+                // CSV format
+                const headers = ['Timestamp', 'Type', 'Title', 'Content'];
+                const rows = messageHistory.map(msg => ({
+                    Timestamp: msg.timestamp.toISOString(),
+                    Type: msg.type,
+                    Title: `"${msg.title.replace(/"/g, '""')}"`,
+                    Content: `"${msg.content.replace(/"/g, '""')}"`
+                }));
+                
+                content = [
+                    headers.join(','),
+                    ...rows.map(row => Object.values(row).join(','))
+                ].join('\n');
+            }
+            
+            // Create download link
+            const blob = new Blob([content], { type: format === 'json' ? 'application/json' : 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            addMessage('System', `Exported ${messageHistory.length} messages to ${filename}`, 'system');
+            
+        } catch (error) {
+            console.error('Error exporting messages:', error);
+            addMessage('Error', 'Failed to export messages: ' + error.message, 'error');
+        }
+    }
+
+    // Update connection status in the UI
+    function updateConnectionStatus(status) {
+        const statusElement = document.querySelector('#connectionStatus');
+        const indicator = statusElement.querySelector('.status-indicator');
+        const text = statusElement.querySelector('span:not(.status-indicator)');
+        
+        // Remove all status classes
+        indicator.className = 'status-indicator';
+        
+        switch (status) {
+            case 'connected':
+                indicator.classList.add('status-connected');
+                text.textContent = 'Connected';
+                connectBtn.disabled = true;
+                disconnectBtn.disabled = false;
+                break;
+                
+            case 'connecting':
+                indicator.classList.add('status-connecting');
+                text.textContent = 'Connecting...';
+                connectBtn.disabled = true;
+                disconnectBtn.disabled = true;
+                break;
+                
+            case 'disconnected':
+                indicator.classList.add('status-disconnected');
+                text.textContent = 'Disconnected';
+                connectBtn.disabled = false;
+                disconnectBtn.disabled = true;
+                break;
+        }
+    }
+
+    // Scroll to the bottom of the messages container
+    function scrollToBottom() {
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    // Format timestamp
+    function formatTime(date) {
+        return date.toLocaleTimeString() + '.' + date.getMilliseconds().toString().padStart(3, '0');
+    }
+
+    // Update UI based on current state
+    function updateUI() {
+        // Update theme
+        if (localStorage.getItem('theme') === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            themeToggle.checked = true;
+        }
+        
+        // Update auto-scroll
+        autoScrollEnabled = localStorage.getItem('autoScroll') !== 'false';
+        autoScrollToggle.checked = autoScrollEnabled;
+    }
+
+    // Initialize the application when the DOM is loaded
+    document.addEventListener('DOMContentLoaded', () => {
+        init();
+    });
 </script>
 </body>
 </html>

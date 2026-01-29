@@ -29,3 +29,8 @@ auction:
   lifecycle:
     scheduler:
       enabled: true
+
+logging:
+  level:
+    org.springframework.web.socket: DEBUG
+    org.springframework.messaging.simp: DEBUG
