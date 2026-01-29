@@ -66,6 +66,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/batches/**").permitAll()
+                        .requestMatchers("/", "/websocket-test.html", "/ws/**").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/item/submit").hasAnyRole("SELLER","ADMIN")
                         .anyRequest().authenticated()

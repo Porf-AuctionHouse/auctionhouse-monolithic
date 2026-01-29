@@ -387,9 +387,9 @@ mvn jacoco:report
 ### 🔄 Phase 3: API & Automation (Week 3)
 - [x] REST controllers
 - [x] JWT authentication
-- [ ] Automated scheduler for batch transitions
-- [ ] Concurrent bidding with locking
-- [ ] WebSocket for real-time updates
+- [x] Automated scheduler for batch transitions
+- [x] Concurrent bidding with locking
+- [x] WebSocket for real-time updates
 
 ### ⏳ Phase 4: Enhanced Features (Week 4)
 - [ ] Email notifications

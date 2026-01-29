@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebSocket Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .message {
+            padding: 10px;
+            margin: 5px 0;
+            background: #f0f0f0;
+            border-radius: 3px;
+        }
+        .bid-message {
+            background: #e3f2fd;
+        }
+        .status-message {
+            background: #fff3e0;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .connected {
+            color: green;
+        }
+        .disconnected {
+            color: red;
+        }
+        input {
+            padding: 8px;
+            margin: 5px;
+            width: 100px;
+        }
+    </style>
+</head>
+<body>
+<h1>Auction WebSocket Test</h1>
+
+<div class="section">
+    <h3>Connection Status: <span id="status" class="disconnected">Disconnected</span></h3>
+    <button onclick="connect()">Connect</button>
+    <button onclick="disconnect()">Disconnect</button>
+</div>
+
+<div class="section">
+    <h3>Subscribe to Topics</h3>
+    <label>Item ID:</label>
+    <input type="number" id="itemId" value="1" />
+    <button onclick="subscribeToItem()">Subscribe to Item</button>
+    <button onclick="subscribeToAuction()">Subscribe to Auction Updates</button>
+</div>
+
+
+<div class="section">
+    <h3>Received Messages</h3>
+    <div id="messages"></div>
+</div>
+
+<script>
+    let stompClient = null;
+
+function connect() {
+    // Clear previous connection if any
+    if (stompClient !== null) {
+        stompClient.disconnect();
+    }
+
+    // Use relative URL
+    const socket = new SockJS('/ws');
+    stompClient = Stomp.over(socket);
+
+    // Enable debug logging
+    stompClient.debug = function(str) {
+        console.log('STOMP: ' + str);
+    };
+
+    const headers = {};
+
+    stompClient.connect(headers,
+        function(frame) {
+            console.log('Connected: ' + frame);
+            document.getElementById('status').textContent = 'Connected';
+            document.getElementById('status').className = 'connected';
+            addMessage('System', 'Connected to WebSocket server', 'status-message');
+
+            // Auto-subscribe after connection
+            subscribeToAuction();
+        },
+        function(error) {
+            console.error('STOMP protocol error: ', error);
+            document.getElementById('status').textContent = 'Connection Error - See Console';
+            document.getElementById('status').className = 'disconnected';
+            addMessage('System', 'Connection error: ' + error, 'status-message');
+        }
+    );
+}
+
+    function disconnect() {
+        if (stompClient !== null) {
+            stompClient.disconnect();
+            document.getElementById('status').textContent = 'Disconnected';
+            document.getElementById('status').className = 'disconnected';
+            addMessage('System', 'Disconnected from WebSocket server', 'status-message');
+        }
+    }
+
+    function subscribeToItem() {
+        const itemId = document.getElementById('itemId').value;
+
+        if (stompClient === null || !stompClient.connected) {
+            alert('Please connect first!');
+            return;
+        }
+
+        // Subscribe to item bid updates
+        stompClient.subscribe('/topic/item/' + itemId, function(message) {
+            const data = JSON.parse(message.body);
+            addMessage('Bid Update', JSON.stringify(data, null, 2), 'bid-message');
+        });
+
+        addMessage('System', 'Subscribed to item ' + itemId, 'status-message');
+    }
+
+    function subscribeToAuction() {
+        if (stompClient === null || !stompClient.connected) {
+            alert('Please connect first!');
+            return;
+        }
+
+        // Subscribe to auction-wide updates
+        stompClient.subscribe('/topic/auction', function(message) {
+            const data = JSON.parse(message.body);
+            addMessage('Auction Update', JSON.stringify(data, null, 2), 'status-message');
+        });
+
+        addMessage('System', 'Subscribed to auction updates', 'status-message');
+    }
+
+    function addMessage(title, content, className) {
+        const messagesDiv = document.getElementById('messages');
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'message ' + className;
+        messageDiv.innerHTML = '<strong>' + title + ':</strong><br>' +
+                               '<pre>' + content + '</pre>' +
+                               '<small>' + new Date().toLocaleTimeString() + '</small>';
+        messagesDiv.insertBefore(messageDiv, messagesDiv.firstChild);
+    }
+
+    // Auto-connect on page load
+    window.onload = function() {
+        connect();
+    };
+</script>
+</body>
+</html>

@@ -7,6 +7,7 @@ import com.example.monoauction.common.enums.BidStatus;
 import com.example.monoauction.common.enums.ItemStatus;
 import com.example.monoauction.item.model.AuctionItem;
 import com.example.monoauction.item.repository.AuctionItemRepository;
+import com.example.monoauction.notifications.service.WebSocketNotificationService;
 import com.example.monoauction.user.model.User;
 import com.example.monoauction.user.repository.UserRepository;
 import jakarta.transaction.Transactional;
@@ -27,6 +28,7 @@ public class BidService {
     private final AuctionItemRepository itemRepository;
     private final AuctionBatchService batchService ;
     private final UserRepository userRepository;
+    private final WebSocketNotificationService webSocketService;
 
     public Bid placeBid(Long itemId, Long bidderId, BigDecimal bidAmount) {
         if(!batchService.isAuctionLive()){
@@ -45,6 +47,13 @@ public class BidService {
         previousHighestBid.ifPresent(prevBid -> {
             prevBid.setStatus(BidStatus.OUTBID);
             bidRepository.save(prevBid);
+
+            webSocketService.sendOutbidNotification(
+                    prevBid.getBidderId(),
+                    itemId,
+                    bidAmount
+            );
+
         });
 
         Bid bid = new Bid();
@@ -60,6 +69,8 @@ public class BidService {
         item.setCurrentBid(bidAmount);
         item.setTotalBids(item.getTotalBids() + 1);
         itemRepository.save(item);
+
+        webSocketService.sendBidUpdate(itemId,savedBid);
 
         return savedBid;
 

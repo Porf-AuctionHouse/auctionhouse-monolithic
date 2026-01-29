@@ -7,10 +7,13 @@ import com.example.monoauction.bids.repository.BidRepository;
 import com.example.monoauction.common.enums.*;
 import com.example.monoauction.item.model.AuctionItem;
 import com.example.monoauction.item.repository.AuctionItemRepository;
+import com.example.monoauction.notifications.service.WebSocketNotificationService;
 import com.example.monoauction.payments.model.Transaction;
 import com.example.monoauction.payments.repository.TransactionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.cache.spi.support.AbstractReadWriteAccess;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -28,9 +31,18 @@ public class AuctionLifecycleScheduler {
     private final AuctionItemRepository itemRepository;
     private final BidRepository bidRepository;
     private final TransactionRepository transactionRepository;
+    private final WebSocketNotificationService webSocketService;
+
+    @Value("${auction.lifecycle.scheduler.enabled}")
+    private boolean schedulerEnabled;
 
     @Scheduled(fixedDelay = 60000)
     public void checkAndUpdateBatchStatus(){
+        log.info("Checking Batch Status");
+        if(!schedulerEnabled){
+            log.info("Scheduler is disabled. Skipping batch status check.");
+            return;
+        }
         try{
             AuctionBatch currentBatch = batchService.getCurrentBatch();
             LocalDateTime now = LocalDateTime.now();
@@ -67,14 +79,22 @@ public class AuctionLifecycleScheduler {
     }
 
     private void transitionToReview(AuctionBatch batch){
-        batch.setStatus(BatchStatus.REVIEW);
 
         List<AuctionItem> submittedItems = itemRepository.findByBatchIdAndStatus(batch.getId(), ItemStatus.SUBMITTED);
 
-        submittedItems.forEach(item -> {
+
+        for(AuctionItem item : submittedItems){
+            ItemStatus oldStatus = item.getStatus();
             item.setStatus(ItemStatus.UNDER_REVIEW);
             itemRepository.save(item);
-        });
+
+            webSocketService.sendItemStatusUpdate(item, oldStatus);
+        }
+
+        webSocketService.sendAuctionStatusUpdate(batch,
+                "Submission phase ended. Items are now under review.");
+
+        batchService.updateBatchStatus(batch.getId(), BatchStatus.REVIEW);
 
         log.info("Batch {} Transition To REVIEW, {} Items User Review.",
                 batch.getBatchCode(), submittedItems.size());
@@ -86,11 +106,17 @@ public class AuctionLifecycleScheduler {
         List<AuctionItem> approvedItems = itemRepository
                 .findByBatchIdAndStatus(batch.getId(), ItemStatus.APPROVED);
 
-        approvedItems.forEach(item -> {
+        for(AuctionItem item : approvedItems) {
+            ItemStatus oldStatus = item.getStatus();
             item.setStatus(ItemStatus.LIVE);
             item.setAuctionStartedAt(LocalDateTime.now());
             itemRepository.save(item);
-        });
+
+            webSocketService.sendItemStatusUpdate(item, oldStatus);
+        }
+
+        webSocketService.sendAuctionStatusUpdate(batch,
+                "AUCTION IS NOW LIVE! Start Bidding!");
 
         log.info("Auction Started For {}. {} Item Now LIVE.", batch.getBatchCode(), approvedItems.size());
     }
@@ -120,6 +146,9 @@ public class AuctionLifecycleScheduler {
         batch.setTotalItemsSold(soldCount);
         batch.setTotalRevenue(totalAmount);
 
+        webSocketService.sendAuctionStatusUpdate(batch,
+                "AUCTION ENDED! " + soldCount + " Items Sold.");
+
         log.info("Auction Ended For Batch {}. Items Sold: {} Items Unsold: {}, Total Revenue: {}",
                 batch.getBatchCode(), soldCount, unsoldCount, totalAmount);
 
@@ -127,6 +156,7 @@ public class AuctionLifecycleScheduler {
     }
 
     private boolean processItemEnd(AuctionItem item){
+        ItemStatus oldStatus = item.getStatus();
         item.setAuctionEndedAt(LocalDateTime.now());
 
         Optional<Bid> winningBidOpt = bidRepository
@@ -135,6 +165,8 @@ public class AuctionLifecycleScheduler {
         if(winningBidOpt.isEmpty()){
             item.setStatus(ItemStatus.UNSOLD);
             itemRepository.save(item);
+
+            webSocketService.sendItemStatusUpdate(item, oldStatus);
 
             log.info("Item {} - No Bid Received", item.getId());
             return false;
@@ -150,6 +182,8 @@ public class AuctionLifecycleScheduler {
             itemRepository.save(item);
             bidRepository.save(winningBid);
 
+            webSocketService.sendItemStatusUpdate(item, oldStatus);
+
             log.info("Item {} - Reserve Price Not Met. Highest Bid: {}, Reserve: {}",
                     item.getId(), winningBid.getAmount(), item.getReservePrice());
             return false;
@@ -163,6 +197,8 @@ public class AuctionLifecycleScheduler {
 
         itemRepository.save(item);
         bidRepository.save(winningBid);
+
+        webSocketService.sendItemStatusUpdate(item, oldStatus);
 
         List<Bid> otherBids = bidRepository.findByItemIdAndStatusNot(item.getId(), BidStatus.WON);
 

@@ -11,6 +11,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -30,14 +31,6 @@ public class BatchController {
     public ResponseEntity<ApiResponse<BatchResponse>> getCurrentBatch(){
         AuctionBatch batch = batchService.getCurrentBatch();
         return ResponseEntity.ok(ApiResponse.success(new BatchResponse(batch)));
-    }
-
-    @PostMapping("/create-test-batch")
-    public ResponseEntity<ApiResponse<BatchResponse>> createTestBatch() {
-        AuctionBatch batch = batchService.createTestBatch();
-        return ResponseEntity.ok(ApiResponse.success(
-                "Test batch created - will transition in minutes",
-                new BatchResponse(batch)));
     }
 
     @GetMapping("/{id}")
@@ -93,4 +86,25 @@ public class BatchController {
 
         return ResponseEntity.ok(ApiResponse.success(status));
     }
+
+    //================dont use below endpoint if AuctionLifecycleScheduler is enabled================
+
+    @PostMapping("/create-test-batch")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<BatchResponse>> createTestBatch() {
+        AuctionBatch batch = batchService.createTestBatch();
+        return ResponseEntity.ok(ApiResponse.success(
+                "Test batch created - will transition in minutes",
+                new BatchResponse(batch)));
+    }
+
+    @PostMapping("/update-batch")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<BatchResponse>> updateBatchToReview(@RequestParam BatchStatus status){
+        AuctionBatch batch = batchService.getCurrentBatch();
+        batchService.batchLifecycle(batch.getId(), status);
+        return ResponseEntity.ok(ApiResponse.success(new BatchResponse(batch)));
+    }
+    //================dont use above endpoint if AuctionLifecycleScheduler is enabled================
+
 }
