@@ -7,11 +7,14 @@ import com.example.monoauction.common.enums.BidStatus;
 import com.example.monoauction.common.enums.ItemStatus;
 import com.example.monoauction.item.model.AuctionItem;
 import com.example.monoauction.item.repository.AuctionItemRepository;
+import com.example.monoauction.notifications.event.BidPlacedEvent;
+import com.example.monoauction.notifications.event.OutbidEvent;
 import com.example.monoauction.notifications.service.WebSocketNotificationService;
 import com.example.monoauction.user.model.User;
 import com.example.monoauction.user.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -29,6 +32,7 @@ public class BidService {
     private final AuctionBatchService batchService ;
     private final UserRepository userRepository;
     private final WebSocketNotificationService webSocketService;
+    private final ApplicationEventPublisher eventPublisher;
 
     public Bid placeBid(Long itemId, Long bidderId, BigDecimal bidAmount) {
         if(!batchService.isAuctionLive()){
@@ -53,6 +57,7 @@ public class BidService {
                     itemId,
                     bidAmount
             );
+            eventPublisher.publishEvent(new OutbidEvent(prevBid, item, bidAmount));
 
         });
 
@@ -71,6 +76,7 @@ public class BidService {
         itemRepository.save(item);
 
         webSocketService.sendBidUpdate(itemId,savedBid);
+        eventPublisher.publishEvent(new BidPlacedEvent(savedBid, item));
 
         return savedBid;
 

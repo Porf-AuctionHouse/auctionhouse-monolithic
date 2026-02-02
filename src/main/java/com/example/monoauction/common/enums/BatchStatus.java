@@ -5,5 +5,6 @@ public enum BatchStatus {
     REVIEW,        // Thursday-Friday
     LIVE,          // Saturday-Sunday
     ENDED,         // After Sunday 8 PM
-    SETTLED        // Payments processed
+    SETTLED,
+    DELETED// Payments processed
 }

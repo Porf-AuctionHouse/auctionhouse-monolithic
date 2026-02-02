@@ -11,7 +11,7 @@ import java.util.Optional;
 
 public interface AuctionBatchRepository extends JpaRepository<AuctionBatch, Long> {
 
-    Optional<AuctionBatch> findByWeekNumberAndYear(Integer weekNumber, Integer year);
+    Optional<AuctionBatch> findByWeekNumberAndYearAndIsDeleted(Integer weekNumber, Integer year, Boolean isDeleted);
 
     Optional<AuctionBatch> findByBatchCode(String batchCode);
 

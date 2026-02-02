@@ -5,13 +5,16 @@ spring:
   security:
     user:
       password-ecoder: bcrypt
+
   output:
     ansi:
       enabled: ALWAYS
+
   datasource:
     url: jdbc:postgresql://localhost:5432/ah_mono_db
     username: postgres
     password: admin1234
+
   jpa:
     hibernate:
       ddl-auto: update
@@ -19,6 +22,23 @@ spring:
     properties:
       dialect: org.hibernate.dialect.PostgreSQLDialect
       format_sql: true
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writeTimeout: 5000
+
 
 jwt:
   secret: sEwB7lNM2DQY/K3CUG3R3jQ+5tsezgzNOnSgkAHHPguh2VVn2Bfi4xaX0jXw1VIZ7jvOUMSoHeu+totSMOY7Ow==
@@ -28,9 +48,15 @@ jwt:
 auction:
   lifecycle:
     scheduler:
-      enabled: true
+      enabled: false
 
 logging:
   level:
-    org.springframework.web.socket: DEBUG
-    org.springframework.messaging.simp: DEBUG
+    org.springframework.web.socket: INFO
+    org.springframework.messaging.simp: INFO
+
+app:
+  name: Auction House
+  email:
+    from: noreply@auctionhouse.com
+    support: support@auctionhouse.com

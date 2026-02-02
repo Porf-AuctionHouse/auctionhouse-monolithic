@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="content">
+    <div style="text-align: center; padding: 20px 0;">
+        <h2 style="color: #667eea; margin: 0;">Welcome to <span th:text="${appName}">Auction House</span>! 🎉</h2>
+    </div>
+
+    <p class="greeting">Dear <strong th:text="${userName}">User</strong>,</p>
+
+    <p class="content" style="font-size: 16px;">
+        Thank you for joining our weekly auction platform!
+        We're excited to have you as part of our community.
+    </p>
+
+    <div class="highlight-box" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; color: white;">
+        <h3 style="margin: 0 0 10px 0; color: white; text-align: center;">How It Works</h3>
+        <p style="margin: 0; text-align: center; opacity: 0.95;">
+            Our auctions run on a weekly schedule
+        </p>
+    </div>
+
+    <div class="item-details">
+        <h3>📅 Weekly Auction Cycle</h3>
+        <div class="detail-row">
+            <span class="detail-label">Monday - Wednesday:</span>
+            <span class="detail-value">Sellers submit items</span>
+        </div>
+        <div class="detail-row">
+            <span class="detail-label">Thursday - Friday:</span>
+            <span class="detail-value">Admin team reviews submissions</span>
+        </div>
+        <div class="detail-row">
+            <span class="detail-label">Saturday 10 AM:</span>
+            <span class="detail-value">Auction goes LIVE</span>
+        </div>
+        <div class="detail-row">
+            <span class="detail-label">Sunday 8 PM:</span>
+            <span class="detail-value">Auction ends, winners announced</span>
+        </div>
+    </div>
+
+    <div class="item-details">
+        <h3>🎯 What You Can Do</h3>
+        <div th:if="${userRole == 'BUYER'}" style="background: #e3f2fd; padding: 15px; border-radius: 6px; margin: 10px 0;">
+            <h4 style="margin: 0 0 10px 0; color: #0d47a1;">As a Buyer:</h4>
+            <ul style="margin: 0; padding-left: 20px; color: #1565c0;">
+                <li>Browse items every Saturday-Sunday</li>
+                <li>Place bids on items you love</li>
+                <li>Watch items to track them</li>
+                <li>Win auctions and get great deals</li>
+            </ul>
+        </div>
+        <div th:if="${userRole == 'SELLER'}" style="background: #fff3e0; padding: 15px; border-radius: 6px; margin: 10px 0;">
+            <h4 style="margin: 0 0 10px 0; color: #e65100;">As a Seller:</h4>
+            <ul style="margin: 0; padding-left: 20px; color: #ef6c00;">
+                <li>Submit items Monday-Wednesday</li>
+                <li>Wait for admin approval</li>
+                <li>Track bids during the auction</li>
+                <li>Get paid when your items sell</li>
+            </ul>
+        </div>
+        <div th:if="${userRole == 'ADMIN'}" style="background: #f3e5f5; padding: 15px; border-radius: 6px; margin: 10px 0;">
+            <h4 style="margin: 0 0 10px 0; color: #4a148c;">As an Admin:</h4>
+            <ul style="margin: 0; padding-left: 20px; color: #6a1b9a;">
+                <li>Review submitted items</li>
+                <li>Approve quality listings</li>
+                <li>Manage auction operations</li>
+                <li>Ensure smooth transactions</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="highlight-box">
+        <h4 style="margin: 0 0 10px 0;">✨ Getting Started Tips:</h4>
+        <ol style="margin: 0; padding-left: 20px;">
+            <li>Complete your profile for better trust</li>
+            <li>Browse current auctions to see how it works</li>
+            <li>Set up email notifications (already enabled!)</li>
+            <li>Read our auction guidelines</li>
+        </ol>
+    </div>
+
+    <center>
+        <a href="#" class="button">Explore Current Auctions</a>
+    </center>
+
+    <div style="background: #f8f9fa; padding: 20px; border-radius: 6px; margin: 20px 0; text-align: center;">
+        <h4 style="margin: 0 0 10px 0; color: #333;">Need Help?</h4>
+        <p style="margin: 0; color: #666;">
+            Check out our <a href="#" style="color: #667eea; text-decoration: none;"><strong>Help Center</strong></a>
+            or contact our <a href="#" style="color: #667eea; text-decoration: none;"><strong>Support Team</strong></a>
+        </p>
+    </div>
+
+    <p class="content">
+        We're here to make your auction experience amazing.
+        Welcome aboard! 🚀
+    </p>
+
+    <p class="content" style="margin-top: 30px;">
+        Best regards,<br>
+        <strong>The <span th:text="${appName}">Auction House</span> Team</strong>
+    </p>
+</div>
+</body>
+</html>

@@ -33,6 +33,9 @@ public class AuctionBatch {
     @Column(nullable = false)
     private Integer year;
 
+    @Column(nullable = false)
+    private Boolean isDeleted = false;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private BatchStatus status;

@@ -7,6 +7,7 @@ import com.example.monoauction.bids.repository.BidRepository;
 import com.example.monoauction.common.enums.*;
 import com.example.monoauction.item.model.AuctionItem;
 import com.example.monoauction.item.repository.AuctionItemRepository;
+import com.example.monoauction.notifications.event.AuctionStartedEvent;
 import com.example.monoauction.notifications.service.WebSocketNotificationService;
 import com.example.monoauction.payments.model.Transaction;
 import com.example.monoauction.payments.repository.TransactionRepository;
@@ -14,6 +15,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -38,6 +40,7 @@ public class AuctionBatchService {
     private final BidRepository bidRepository;
     private final TransactionRepository transactionRepository;
     private final WebSocketNotificationService webSocketService;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Value("${auction.lifecycle.scheduler.enabled}")
     private boolean schedulerEnabled;
@@ -47,7 +50,7 @@ public class AuctionBatchService {
         int week = now.get(WeekFields.of(DayOfWeek.MONDAY, 1).weekOfYear());
         int year = now.getYear();
 
-        Optional<AuctionBatch> existingBatch = batchRepository.findByWeekNumberAndYear(week, year);
+        Optional<AuctionBatch> existingBatch = batchRepository.findByWeekNumberAndYearAndIsDeleted(week, year, false);
 
         if(existingBatch.isPresent()){
             return existingBatch.get();
@@ -157,6 +160,17 @@ public class AuctionBatchService {
             throw new RuntimeException("Scheduler is enabled");
         }
 
+        int week = LocalDate.now().get(WeekFields.of(DayOfWeek.MONDAY, 1).weekOfYear());
+        int year = LocalDate.now().getYear();
+
+        Optional<AuctionBatch> existingBatch = batchRepository.findByWeekNumberAndYearAndIsDeleted(week, year, false);
+
+        if(existingBatch.isPresent()){
+            existingBatch.get().setIsDeleted(true);
+            existingBatch.get().setStatus(BatchStatus.DELETED);
+            batchRepository.save(existingBatch.get());
+        }
+
         LocalDateTime now = LocalDateTime.now();
         AuctionBatch batch = new AuctionBatch();
         batch.setBatchCode("TEST-BATCH-" + System.currentTimeMillis());
@@ -249,6 +263,8 @@ public class AuctionBatchService {
 
         webSocketService.sendAuctionStatusUpdate(batch,
                 "AUCTION IS NOW LIVE! Start Bidding!");
+        eventPublisher.publishEvent(new AuctionStartedEvent(batch));
+
 
         log.info("Auction Started For {}. {} Item Now LIVE.", batch.getBatchCode(), approvedItems.size());
     }

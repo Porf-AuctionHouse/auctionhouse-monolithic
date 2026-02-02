@@ -8,10 +8,12 @@ import com.example.monoauction.common.enums.ItemStatus;
 import com.example.monoauction.common.enums.UserRole;
 import com.example.monoauction.item.model.AuctionItem;
 import com.example.monoauction.item.repository.AuctionItemRepository;
+import com.example.monoauction.notifications.event.ItemSubmittedEvent;
 import com.example.monoauction.user.model.User;
 import com.example.monoauction.user.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -27,6 +29,7 @@ public class ItemSubmissionService {
     private final AuctionBatchService batchService;
     private final AuctionBatchRepository batchRepository;
     private final UserRepository userRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     public AuctionItem submitItem(Long sellerId, String title, String description,
                                   ItemCategory category, BigDecimal startingPrice,
@@ -64,6 +67,8 @@ public class ItemSubmissionService {
         AuctionItem savedItem = itemRepository.save(item);
 
         batchService.incrementItemSubmitted(currentBatch.getId());
+
+        eventPublisher.publishEvent(new ItemSubmittedEvent(savedItem));
 
         return savedItem;
 

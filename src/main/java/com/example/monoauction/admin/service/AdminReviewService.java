@@ -6,10 +6,13 @@ import com.example.monoauction.common.enums.ItemStatus;
 import com.example.monoauction.common.enums.UserRole;
 import com.example.monoauction.item.model.AuctionItem;
 import com.example.monoauction.item.repository.AuctionItemRepository;
+import com.example.monoauction.notifications.event.ItemApprovedEvent;
+import com.example.monoauction.notifications.event.ItemRejectedEvent;
 import com.example.monoauction.user.model.User;
 import com.example.monoauction.user.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -25,6 +28,7 @@ public class AdminReviewService {
     private final AuctionItemRepository itemRepository;
     private final AuctionBatchService batchService;
     private final UserRepository userRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     public List<AuctionItem> getItemForReview(){
      AuctionBatch currentBatch = batchService.getCurrentBatch();
@@ -56,6 +60,7 @@ public class AdminReviewService {
         AuctionItem savedItem = itemRepository.save(item);
 
         batchService.incrementItemApproved(item.getBatchId());
+        eventPublisher.publishEvent(new ItemApprovedEvent(savedItem));
 
         return savedItem;
     }
@@ -79,6 +84,7 @@ public class AdminReviewService {
         AuctionItem savedItem = itemRepository.save(item);
 
         batchService.incrementItemRejected(item.getBatchId());
+        eventPublisher.publishEvent(new ItemRejectedEvent(savedItem, reason));
 
         return savedItem;
 

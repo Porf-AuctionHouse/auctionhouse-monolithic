@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="content">
+    <p class="greeting">Dear <strong th:text="${userName}">User</strong>,</p>
+
+    <div class="highlight-box" style="background: #d4edda; border-left-color: #28a745;">
+        <h3 style="margin: 0 0 10px 0; color: #155724;">🎉 Congratulations!</h3>
+        <p style="margin: 0; color: #155724;">
+            Your item "<strong th:text="${itemTitle}">Item</strong>" has been approved for auction!
+        </p>
+    </div>
+
+    <div class="item-details">
+        <h3>📦 Item Details</h3>
+        <div class="detail-row">
+            <span class="detail-label">Title:</span>
+            <span class="detail-value" th:text="${itemTitle}">Item Title</span>
+        </div>
+        <div class="detail-row">
+            <span class="detail-label">Starting Price:</span>
+            <span class="detail-value price" th:text="'$' + ${itemPrice}">$100.00</span>
+        </div>
+        <div class="detail-row">
+            <span class="detail-label">Status:</span>
+            <span class="status-badge status-success">Approved</span>
+        </div>
+    </div>
+
+    <div class="item-details">
+        <h3>📅 Auction Schedule</h3>
+        <div class="detail-row">
+            <span class="detail-label">Starts:</span>
+            <span class="detail-value" th:text="${auctionStartTime}">Saturday 10:00 AM</span>
+        </div>
+        <div class="detail-row">
+            <span class="detail-label">Ends:</span>
+            <span class="detail-value" th:text="${auctionEndTime}">Sunday 8:00 PM</span>
+        </div>
+    </div>
+
+    <div class="highlight-box">
+        <strong>What happens next?</strong>
+        <ul style="margin: 10px 0; padding-left: 20px;">
+            <li>Your item will go live on <span th:text="${auctionStartDay}">Saturday</span></li>
+            <li>Buyers can start bidding at <span th:text="${auctionStartTimeOnly}">10:00 AM</span></li>
+            <li>You'll receive notifications for each bid</li>
+            <li>Winner announced on <span th:text="${auctionEndDay}">Sunday evening</span></li>
+        </ul>
+    </div>
+
+    <center>
+        <a href="#" class="button">View My Item</a>
+    </center>
+
+    <p class="content">
+        Good luck with your auction! We'll notify you when bidding starts.
+    </p>
+
+    <p class="content" style="margin-top: 30px;">
+        Best regards,<br>
+        <strong>The <span th:text="${appName}">Auction House</span> Team</strong>
+    </p>
+</div>
+</body>
+</html>
