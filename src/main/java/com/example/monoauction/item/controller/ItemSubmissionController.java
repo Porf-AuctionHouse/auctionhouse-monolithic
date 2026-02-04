@@ -76,8 +76,10 @@ public class ItemSubmissionController {
         try {
             List<String> filenames = new ArrayList<>();
             if (images != null && !images.isEmpty()) {
-                filenames = fileStorageService.storeFiles(images);
-            }
+                filenames = fileStorageService.storeFilesWithProcessing(images)
+                        .stream()
+                        .map(map -> map.get("original"))
+                        .collect(java.util.stream.Collectors.toList());            }
 
             SubmitItemRequest request = new SubmitItemRequest();
             request.setTitle(title);
@@ -90,7 +92,6 @@ public class ItemSubmissionController {
 
             User seller = userService.getUserById(sellerId);
 
-            // Convert filenames to URLs for response
             ItemResponse response = new ItemResponse(item, seller.getFullName());
             if (item.getImageUrls() != null && !item.getImageUrls().isEmpty()) {
                 String imageUrls = fileStorageService.filenamesToUrls(item.getImageUrls());

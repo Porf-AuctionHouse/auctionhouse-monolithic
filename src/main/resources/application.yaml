@@ -57,10 +57,10 @@ auction:
     scheduler:
       enabled: false
 
-logging:
-  level:
-    org.springframework.web.socket: DEBUG
-    org.springframework.messaging.simp: DEBUG
+#logging:
+#  level:
+#    org.springframework.web.socket: DEBUG
+#    org.springframework.messaging.simp: DEBUG
 
 app:
   name: Auction House
@@ -74,3 +74,22 @@ app:
     max-files-per-item: 5
     allowed-extensions: .jpg,.jpeg,.png,.gif,.webp
     base-url: ${BASE_URL:http://localhost:8080}
+  image:
+    quality: 0.85
+    thumbnail:
+      width: 150
+      height: 150
+      enabled: true
+    medium:
+      width: 800
+      height: 600
+      enabled: true
+    large:
+      width: 1200
+      height: 800
+      enabled: true
+    original:
+      max-width: 2048
+      max-height: 2048
+    convert-to-webp: true
+    keep-original: false

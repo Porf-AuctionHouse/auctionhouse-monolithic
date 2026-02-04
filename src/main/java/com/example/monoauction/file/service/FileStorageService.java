@@ -15,10 +15,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -36,13 +33,13 @@ public class FileStorageService {
     private List<String> allowedExtensions;
     @Value("${app.upload.base-url}")
     private String baseUrl;
+    private final ImageProcessingService imageProcessingService;
 
-    public String storeFile(MultipartFile file) throws IOException {
+    public Map<String, String> storeFile(MultipartFile file) throws IOException {
 
         validateFile(file);
 
         String originalFilename = file.getOriginalFilename();
-        String extension = getFileExtension(originalFilename);
         String uniqueFilename = generateUniqueFilename(originalFilename);
 
         Path uploadPath = Paths.get(uploadDirectory);
@@ -56,24 +53,28 @@ public class FileStorageService {
 
         log.info("File uploaded successfully: {}", uniqueFilename);
 
-        return uniqueFilename;
+        Map<String, String> processedImages = imageProcessingService.processImage(uniqueFilename);
+
+        return processedImages;
 
     }
 
-    public List<String> storeFiles(List<MultipartFile> files) throws IOException {
+    public List<Map<String, String>> storeFilesWithProcessing(List<MultipartFile> files)
+            throws IOException {
+
         if (files.size() > maxFilesPerItem) {
             throw new BusinessException(
                     "Maximum " + maxFilesPerItem + " files allowed per item");
         }
 
-        List<String> fileNames = new ArrayList<>();
+        List<Map<String, String>> allProcessedImages = new ArrayList<>();
 
         for (MultipartFile file : files) {
-            String filename = storeFile(file);
-            fileNames.add(storeFile(file));
+            Map<String, String> processedImages = storeFile(file);
+            allProcessedImages.add(processedImages);
         }
 
-        return fileNames;
+        return allProcessedImages;
     }
 
     public Resource loadFileAsResource(String filename) throws IOException {

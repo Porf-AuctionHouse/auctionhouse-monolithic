@@ -392,8 +392,8 @@ mvn jacoco:report
 - [x] WebSocket for real-time updates
 
 ### ⏳ Phase 4: Enhanced Features (Week 4)
-- [ ] Email notifications
-- [ ] File upload for images
+- [x] Email notifications
+- [x] File upload for images
 - [ ] Search and filters
 - [ ] Watchlist functionality
 - [ ] Admin dashboard

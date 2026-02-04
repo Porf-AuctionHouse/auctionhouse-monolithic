@@ -9,6 +9,8 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
 
 @Data
 @AllArgsConstructor
@@ -22,6 +24,7 @@ public class ItemResponse {
     private String description;
     private ItemCategory category;
     private String imageUrls;
+    private Map<String, List<String>> imageSizes;
     private BigDecimal startingPrice;
     private BigDecimal reservePrice;
     private BigDecimal currentBid;
