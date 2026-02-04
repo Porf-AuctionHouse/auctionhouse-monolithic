@@ -13,7 +13,9 @@ import com.example.monoauction.security.SecurityUtils;
 import com.example.monoauction.user.model.User;
 import com.example.monoauction.user.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -35,7 +37,7 @@ public class ItemViewController {
 
     @GetMapping("/items")
     public ResponseEntity<ApiResponse<List<ItemResponse>>> getLiveItems(){
-        List<AuctionItem> items = itemRepository.findByStatus(ItemStatus.LIVE);
+        List<AuctionItem> items = itemRepository.findByStatusOrderByCreatedAtDesc(ItemStatus.LIVE);
 
         List<ItemResponse> responses = items.stream()
                 .map(item -> {

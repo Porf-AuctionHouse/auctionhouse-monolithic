@@ -174,7 +174,7 @@ public class ItemSubmissionService {
     }
 
     public List<AuctionItem> getItemsByStatus(ItemStatus status){
-        return itemRepository.findByStatus(status);
+        return itemRepository.findByStatusOrderByCreatedAtDesc(status);
     }
 
     public List<AuctionItem> getItemsByCategoryAndStatus(ItemCategory category, ItemStatus status){
