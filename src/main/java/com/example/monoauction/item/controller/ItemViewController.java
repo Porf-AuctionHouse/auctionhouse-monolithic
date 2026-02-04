@@ -4,6 +4,8 @@ import com.example.monoauction.batch.model.AuctionBatch;
 import com.example.monoauction.batch.service.AuctionBatchService;
 import com.example.monoauction.common.dto.ApiResponse;
 import com.example.monoauction.common.enums.ItemStatus;
+import com.example.monoauction.common.execptions.ResourceNotFoundException;
+import com.example.monoauction.file.service.FileStorageService;
 import com.example.monoauction.item.dto.ItemResponse;
 import com.example.monoauction.item.model.AuctionItem;
 import com.example.monoauction.item.repository.AuctionItemRepository;
@@ -12,10 +14,7 @@ import com.example.monoauction.user.model.User;
 import com.example.monoauction.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.List;
@@ -32,6 +31,7 @@ public class ItemViewController {
     private final AuctionBatchService batchService;
 
     private final UserService userService;
+    private final FileStorageService fileStorageService;
 
     @GetMapping("/items")
     public ResponseEntity<ApiResponse<List<ItemResponse>>> getLiveItems(){
@@ -45,6 +45,23 @@ public class ItemViewController {
                 .toList();
 
         return ResponseEntity.ok(ApiResponse.success(responses));
+    }
+
+    @GetMapping("/items/{id}/with-images")
+    public ResponseEntity<ApiResponse<ItemResponse>> getItemWithImages(@PathVariable Long id) {
+        AuctionItem item = itemRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Item not found"));
+
+        User seller = userService.getUserById(item.getSellerId());
+        ItemResponse response = new ItemResponse(item, seller.getFullName());
+
+        // Convert filenames to full URLs
+        if (item.getImageUrls() != null && !item.getImageUrls().isEmpty()) {
+            String imageUrls = fileStorageService.filenamesToUrls(item.getImageUrls());
+            response.setImageUrls(imageUrls);
+        }
+
+        return ResponseEntity.ok(ApiResponse.success(response));
     }
 
     @GetMapping("/results")

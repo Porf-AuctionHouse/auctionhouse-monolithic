@@ -6,6 +6,9 @@ import com.example.monoauction.batch.service.AuctionBatchService;
 import com.example.monoauction.common.enums.ItemCategory;
 import com.example.monoauction.common.enums.ItemStatus;
 import com.example.monoauction.common.enums.UserRole;
+import com.example.monoauction.common.execptions.BusinessException;
+import com.example.monoauction.common.execptions.ResourceNotFoundException;
+import com.example.monoauction.item.dto.SubmitItemRequest;
 import com.example.monoauction.item.model.AuctionItem;
 import com.example.monoauction.item.repository.AuctionItemRepository;
 import com.example.monoauction.notifications.event.ItemSubmittedEvent;
@@ -72,6 +75,50 @@ public class ItemSubmissionService {
 
         return savedItem;
 
+    }
+
+    public AuctionItem submitItemWithImages(Long sellerId, SubmitItemRequest request,
+                                            List<String> uploadedFilenames) {
+
+        if (!batchService.isSubmissionOpen()) {
+            throw new BusinessException("Item submission is closed.");
+        }
+
+        AuctionBatch currentBatch = batchService.getCurrentBatch();
+
+        User seller = userRepository.findById(sellerId)
+                .orElseThrow(() -> new ResourceNotFoundException("Seller not found"));
+
+        if (seller.getRole() != UserRole.SELLER && seller.getRole() != UserRole.ADMIN) {
+            throw new BusinessException("Only sellers can submit items");
+        }
+
+        AuctionItem item = new AuctionItem();
+        item.setBatchId(currentBatch.getId());
+        item.setSellerId(sellerId);
+        item.setTitle(request.getTitle());
+        item.setDescription(request.getDescription());
+        item.setCategory(request.getCategory());
+        item.setStartingPrice(request.getStartingPrice());
+        item.setReservePrice(request.getReservePrice());
+
+        if (uploadedFilenames != null && !uploadedFilenames.isEmpty()) {
+            item.setImageUrls(String.join(",", uploadedFilenames));
+        }
+
+        item.setStatus(ItemStatus.SUBMITTED);
+        item.setSubmittedAt(LocalDateTime.now());
+        item.setTotalBids(0);
+        item.setViewCount(0);
+        item.setWatchlistCount(0);
+
+        AuctionItem savedItem = itemRepository.save(item);
+
+        batchService.incrementItemSubmitted(currentBatch.getId());
+
+        eventPublisher.publishEvent(new ItemSubmittedEvent(savedItem));
+
+        return savedItem;
     }
 
     public List<AuctionItem> getMySubmissions(Long sellerId){

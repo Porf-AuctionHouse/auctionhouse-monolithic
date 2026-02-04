@@ -21,7 +21,7 @@ public class ItemResponse {
     private String title;
     private String description;
     private ItemCategory category;
-    private String imageUrl;
+    private String imageUrls;
     private BigDecimal startingPrice;
     private BigDecimal reservePrice;
     private BigDecimal currentBid;
@@ -42,7 +42,7 @@ public class ItemResponse {
         this.title = item.getTitle();
         this.description = item.getDescription();
         this.category = item.getCategory();
-        this.imageUrl = item.getImageUrls();
+        this.imageUrls = item.getImageUrls();
         this.startingPrice = item.getStartingPrice();
         this.reservePrice = item.getReservePrice();
         this.currentBid = item.getCurrentBid();
