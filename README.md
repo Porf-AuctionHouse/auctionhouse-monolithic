@@ -394,7 +394,7 @@ mvn jacoco:report
 ### ⏳ Phase 4: Enhanced Features (Week 4)
 - [x] Email notifications
 - [x] File upload for images
-- [ ] Search and filters
+- [x] Search and filters
 - [ ] Watchlist functionality
 - [ ] Admin dashboard
 

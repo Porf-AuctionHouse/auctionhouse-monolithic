@@ -2,6 +2,7 @@ package com.example.monoauction.user.model;
 
 
 import com.example.monoauction.common.enums.UserRole;
+import com.example.monoauction.watchlist.model.WatchlistItem;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -12,7 +13,9 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 
 
 @Entity
@@ -69,4 +72,7 @@ public class User{
     public int hashCode() {
         return Objects.hash(id);
     }
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<WatchlistItem> watchlist = new HashSet<>();
 }

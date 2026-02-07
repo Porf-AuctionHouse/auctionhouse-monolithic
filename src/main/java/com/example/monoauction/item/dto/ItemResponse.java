@@ -33,7 +33,6 @@ public class ItemResponse {
     private String rejectionReason;
     private String adminNotes;
     private Integer totalBids;
-    private Integer viewCount;
     private LocalDateTime submittedAt;
     private LocalDateTime createdAt;
 
@@ -54,7 +53,6 @@ public class ItemResponse {
         this.rejectionReason = item.getRejectionReason();
         this.adminNotes = item.getAdminNote();
         this.totalBids = item.getTotalBids();
-        this.viewCount = item.getViewCount();
         this.submittedAt = item.getSubmittedAt();
         this.createdAt = item.getCreatedAt();
 

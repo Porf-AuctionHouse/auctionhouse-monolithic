@@ -188,7 +188,7 @@ public class EmailService {
                 bidder.getFullName(),
                 item.getTitle(),
                 newBidAmount,
-                item.getCurrentBid().subtract(item.getBidIncrement()), // Approximate previous bid
+                item.getCurrentBid().subtract(item.getBidIncrement()),
                 appName
         );
 
@@ -291,5 +291,106 @@ public class EmailService {
         );
 
         sendSimpleEmail(user.getEmail(), subject, body);
+    }
+
+    public void sendWatchlistItemBidEmail(User watcher, AuctionItem item, Bid bid) {
+        String subject = appName + " - New Bid on Watched Item!";
+
+        String body = String.format(
+                "Dear %s,\n\n" +
+                        "There's a new bid on an item you're watching!\n\n" +
+                        "Item: %s\n" +
+                        "New Bid Amount: $%.2f\n" +
+                        "Total Bids: %d\n\n" +
+                        "Don't miss out! Place your bid now to stay in the competition.\n\n" +
+                        "View Item: [Link to item page]\n\n" +
+                        "Best regards,\n" +
+                        "The %s Team",
+                watcher.getFullName(),
+                item.getTitle(),
+                bid.getAmount(),
+                item.getTotalBids(),
+                appName
+        );
+
+        sendSimpleEmail(watcher.getEmail(), subject, body);
+    }
+
+    public void sendWatchlistItemGoingLiveEmail(User watcher, AuctionItem item) {
+        String subject = appName + " - Your Watched Item is Now LIVE!";
+
+        String body = String.format(
+                "Dear %s,\n\n" +
+                        "Great news! An item on your watchlist is now live for bidding.\n\n" +
+                        "Item: %s\n" +
+                        "Category: %s\n" +
+                        "Starting Price: $%.2f\n" +
+                        "Reserve Price: $%.2f\n\n" +
+                        "The auction is now open. Be the first to bid!\n\n" +
+                        "View & Bid Now: [Link to item page]\n\n" +
+                        "Best regards,\n" +
+                        "The %s Team",
+                watcher.getFullName(),
+                item.getTitle(),
+                item.getCategory(),
+                item.getStartingPrice(),
+                item.getReservePrice(),
+                appName
+        );
+
+        sendSimpleEmail(watcher.getEmail(), subject, body);
+    }
+
+    public void sendWatchlistItemEndingSoonEmail(User watcher, AuctionItem item, int hoursRemaining) {
+        String subject = appName + " - Watched Item Ending Soon!";
+
+        String body = String.format(
+                "Dear %s,\n\n" +
+                        "⏰ FINAL CALL! An item on your watchlist is ending in %d hour%s.\n\n" +
+                        "Item: %s\n" +
+                        "Current Bid: $%.2f\n" +
+                        "Reserve Price: $%.2f\n" +
+                        "Total Bids: %d\n\n" +
+                        "This is your last chance to place a bid!\n\n" +
+                        "Bid Now: [Link to item page]\n\n" +
+                        "Best regards,\n" +
+                        "The %s Team",
+                watcher.getFullName(),
+                hoursRemaining,
+                hoursRemaining == 1 ? "" : "s",
+                item.getTitle(),
+                item.getCurrentBid(),
+                item.getReservePrice(),
+                item.getTotalBids(),
+                appName
+        );
+
+        sendSimpleEmail(watcher.getEmail(), subject, body);
+    }
+
+    public void sendWatchlistItemPriceDropEmail(User watcher, AuctionItem item, BigDecimal oldPrice, BigDecimal newPrice) {
+        String subject = appName + " - Price Drop on Watched Item!";
+
+        String body = String.format(
+                "Dear %s,\n\n" +
+                        "💰 PRICE DROP ALERT! An item on your watchlist just got more affordable.\n\n" +
+                        "Item: %s\n" +
+                        "Old Starting Price: $%.2f\n" +
+                        "New Starting Price: $%.2f\n" +
+                        "You Save: $%.2f (%.0f%% off)\n\n" +
+                        "This is a great opportunity! Check it out now.\n\n" +
+                        "View Item: [Link to item page]\n\n" +
+                        "Best regards,\n" +
+                        "The %s Team",
+                watcher.getFullName(),
+                item.getTitle(),
+                oldPrice,
+                newPrice,
+                oldPrice.subtract(newPrice),
+                oldPrice.subtract(newPrice).divide(oldPrice, 2, BigDecimal.ROUND_HALF_UP).multiply(BigDecimal.valueOf(100)),
+                appName
+        );
+
+        sendSimpleEmail(watcher.getEmail(), subject, body);
     }
 }

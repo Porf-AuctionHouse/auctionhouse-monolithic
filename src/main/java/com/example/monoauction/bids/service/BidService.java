@@ -9,11 +9,15 @@ import com.example.monoauction.item.model.AuctionItem;
 import com.example.monoauction.item.repository.AuctionItemRepository;
 import com.example.monoauction.notifications.event.BidPlacedEvent;
 import com.example.monoauction.notifications.event.OutbidEvent;
+import com.example.monoauction.notifications.event.WatchlistItemBidEvent;
 import com.example.monoauction.notifications.service.WebSocketNotificationService;
 import com.example.monoauction.user.model.User;
 import com.example.monoauction.user.repository.UserRepository;
+import com.example.monoauction.watchlist.model.WatchlistItem;
+import com.example.monoauction.watchlist.repository.WatchlistRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
@@ -21,10 +25,12 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
 @RequiredArgsConstructor
+@Slf4j
 public class BidService {
 
     private final BidRepository bidRepository;
@@ -33,6 +39,7 @@ public class BidService {
     private final UserRepository userRepository;
     private final WebSocketNotificationService webSocketService;
     private final ApplicationEventPublisher eventPublisher;
+    private final WatchlistRepository watchlistRepository;
 
     public Bid placeBid(Long itemId, Long bidderId, BigDecimal bidAmount) {
         if(!batchService.isAuctionLive()){
@@ -58,7 +65,6 @@ public class BidService {
                     bidAmount
             );
             eventPublisher.publishEvent(new OutbidEvent(prevBid, item, bidAmount));
-
         });
 
         Bid bid = new Bid();
@@ -76,6 +82,7 @@ public class BidService {
         itemRepository.save(item);
 
         webSocketService.sendBidUpdate(itemId,savedBid);
+        notifyWatchers(item, savedBid);
         eventPublisher.publishEvent(new BidPlacedEvent(savedBid, item));
 
         return savedBid;
@@ -123,6 +130,24 @@ public class BidService {
         return item.getCurrentBid() != null
                 ? item.getCurrentBid().add(item.getBidIncrement())
                 : item.getStartingPrice();
+    }
+
+    private void notifyWatchers(AuctionItem item, Bid bid) {
+        try {
+            List<WatchlistItem> watchlistItems = watchlistRepository.findUsersWatchingItem(item.getId());
+
+            List<User> watchers = watchlistItems.stream()
+                    .filter(wi -> wi.getNotifyOnBid() != null && wi.getNotifyOnBid())
+                    .map(wi -> userRepository.findById(wi.getUser().getId()).orElse(null))
+                    .collect(Collectors.toList());
+
+            if (!watchers.isEmpty()) {
+                eventPublisher.publishEvent(new WatchlistItemBidEvent(this, item, bid, watchers));
+            }
+
+        } catch (Exception e) {
+            log.error("Error notifying watchers for item {}", item.getId(), e);
+        }
     }
 
 }

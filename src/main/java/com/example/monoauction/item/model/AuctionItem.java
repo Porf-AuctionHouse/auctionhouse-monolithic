@@ -2,6 +2,7 @@ package com.example.monoauction.item.model;
 
 import com.example.monoauction.common.enums.ItemCategory;
 import com.example.monoauction.common.enums.ItemStatus;
+import com.example.monoauction.watchlist.model.WatchlistItem;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -12,7 +13,9 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.Locale;
+import java.util.Set;
 
 @Entity
 @Table(name = "ah_auctionitems", indexes = {
@@ -79,11 +82,8 @@ public class AuctionItem {
     @Column(nullable = false)
     private Integer totalBids = 0;
 
-    @Column(nullable = false)
-    private Integer viewCount = 0;
-
-    @Column(nullable = false)
-    private Integer watchlistCount = 0;
+    @OneToMany(mappedBy = "auctionItem", cascade = CascadeType.ALL)
+    private Set<WatchlistItem> watchedBy = new HashSet<>();
 
     private LocalDateTime submittedAt;
     private LocalDateTime reviewedAt;
@@ -104,4 +104,9 @@ public class AuctionItem {
 
     @UpdateTimestamp
     private LocalDateTime updatedAt;
+
+
+    public int getWatchlistCount() {
+        return watchedBy != null ? watchedBy.size() : 0;
+    }
 }

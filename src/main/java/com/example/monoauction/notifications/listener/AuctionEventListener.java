@@ -117,4 +117,72 @@ public class AuctionEventListener {
             log.error("Error sending auction started email", e);
         }
     }
+
+    @EventListener
+    @Async
+    public void handleWatchlistItemBid(WatchlistItemBidEvent event) {
+        try {
+            AuctionItem item = event.getItem();
+            Bid bid = event.getBid();
+            List<User> watchers = event.getWatchers();
+
+            // Get the bidder to exclude them from notifications
+            User bidder = userRepository.findById(bid.getBidderId())
+                    .orElse(null);
+
+            for (User watcher : watchers) {
+                // Don't notify the bidder about their own bid
+                if (bidder != null && watcher.getId().equals(bidder.getId())) {
+                    continue;
+                }
+
+                emailService.sendWatchlistItemBidEmail(watcher, item, bid);
+            }
+
+            log.info("Watchlist bid notifications sent to {} watchers for item {}",
+                    watchers.size(), item.getId());
+
+        } catch (Exception e) {
+            log.error("Error sending watchlist bid notifications", e);
+        }
+    }
+
+    @EventListener
+    @Async
+    public void handleWatchlistItemGoingLive(WatchlistItemGoingLiveEvent event) {
+        try {
+            AuctionItem item = event.getItem();
+            List<User> watchers = event.getWatchers();
+
+            for (User watcher : watchers) {
+                emailService.sendWatchlistItemGoingLiveEmail(watcher, item);
+            }
+
+            log.info("Watchlist going live notifications sent to {} watchers for item {}",
+                    watchers.size(), item.getId());
+
+        } catch (Exception e) {
+            log.error("Error sending watchlist going live notifications", e);
+        }
+    }
+
+    @EventListener
+    @Async
+    public void handleWatchlistItemEndingSoon(WatchlistItemEndingSoonEvent event) {
+        try {
+            AuctionItem item = event.getItem();
+            List<User> watchers = event.getWatchers();
+            int hoursRemaining = event.getHoursRemaining();
+
+            for (User watcher : watchers) {
+                emailService.sendWatchlistItemEndingSoonEmail(watcher, item, hoursRemaining);
+            }
+
+            log.info("Watchlist ending soon notifications sent to {} watchers for item {}",
+                    watchers.size(), item.getId());
+
+        } catch (Exception e) {
+            log.error("Error sending watchlist ending soon notifications", e);
+        }
+    }
 }

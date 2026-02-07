@@ -64,8 +64,6 @@ public class ItemSubmissionService {
         item.setStatus(ItemStatus.SUBMITTED);
         item.setSubmittedAt(LocalDateTime.now());
         item.setTotalBids(0);
-        item.setViewCount(0);
-        item.setWatchlistCount(0);
 
         AuctionItem savedItem = itemRepository.save(item);
 
@@ -109,8 +107,6 @@ public class ItemSubmissionService {
         item.setStatus(ItemStatus.SUBMITTED);
         item.setSubmittedAt(LocalDateTime.now());
         item.setTotalBids(0);
-        item.setViewCount(0);
-        item.setWatchlistCount(0);
 
         AuctionItem savedItem = itemRepository.save(item);
 
