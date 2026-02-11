@@ -46,6 +46,8 @@ public class AuthService {
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         User user = userService.getUserByEmail(email);
+        user.setLastLoginAt(LocalDateTime.now());
+        User savedUser = userService.saveUser(user);
         return generateToken(user);
 
     }

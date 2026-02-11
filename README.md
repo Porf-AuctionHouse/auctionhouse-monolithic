@@ -395,8 +395,8 @@ mvn jacoco:report
 - [x] Email notifications
 - [x] File upload for images
 - [x] Search and filters
-- [ ] Watchlist functionality
-- [ ] Admin dashboard
+- [x] Watchlist functionality
+- [x] Admin dashboard
 
 ### ⏳ Phase 5: Production Ready (Week 5)
 - [ ] Payment integration (Stripe/PayPal)

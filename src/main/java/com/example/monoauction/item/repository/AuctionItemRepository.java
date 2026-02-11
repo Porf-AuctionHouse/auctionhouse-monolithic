@@ -88,4 +88,41 @@ public interface AuctionItemRepository extends JpaRepository<AuctionItem, Long> 
     Page<AuctionItem> findByReservePriceExistence(
             @Param("hasReserve") boolean hasReserve,
             Pageable pageable);
+
+    // Category analytics
+    @Query("SELECT ai.category, COUNT(ai), " +
+            "SUM(CASE WHEN ai.status = 'SOLD' THEN 1 ELSE 0 END), " +
+            "COALESCE(SUM(CASE WHEN ai.status = 'SOLD' THEN ai.currentBid ELSE 0 END), 0), " +
+            "COALESCE(AVG(CASE WHEN ai.status = 'SOLD' THEN ai.currentBid END), 0), " +
+            "COALESCE(MAX(CASE WHEN ai.status = 'SOLD' THEN ai.currentBid END), 0) " +
+            "FROM AuctionItem ai " +
+            "WHERE ai.batchId = :batchId " +
+            "GROUP BY ai.category " +
+            "ORDER BY SUM(CASE WHEN ai.status = 'SOLD' THEN ai.currentBid ELSE 0 END) DESC")
+    List<Object[]> getCategoryAnalytics(@Param("batchId") Long batchId);
+
+    // Average item price for sold items
+    @Query("SELECT COALESCE(AVG(ai.currentBid), 0) FROM AuctionItem ai WHERE ai.status = 'SOLD' AND ai.batchId = :batchId")
+    BigDecimal getAverageSalePrice(@Param("batchId") Long batchId);
+
+    // Highest bid in batch
+    @Query("SELECT COALESCE(MAX(ai.currentBid), 0) FROM AuctionItem ai WHERE ai.batchId = :batchId")
+    BigDecimal getHighestBid(@Param("batchId") Long batchId);
+
+    // Count by status
+    @Query("SELECT COUNT(ai) FROM AuctionItem ai WHERE ai.batchId = :batchId AND ai.status = :status")
+    Long countByBatchIdAndStatus(@Param("batchId") Long batchId, @Param("status") String status);
+
+    // Top selling items
+    @Query("SELECT ai FROM AuctionItem ai WHERE ai.status = 'SOLD' ORDER BY ai.currentBid DESC")
+    List<AuctionItem> findTopSellingItems(@Param("limit") int limit);
+
+    // Items by seller with stats
+    @Query("SELECT ai.sellerId, COUNT(ai), " +
+            "SUM(CASE WHEN ai.status = 'SOLD' THEN 1 ELSE 0 END), " +
+            "COALESCE(SUM(CASE WHEN ai.status = 'SOLD' THEN ai.currentBid ELSE 0 END), 0) " +
+            "FROM AuctionItem ai " +
+            "GROUP BY ai.sellerId " +
+            "ORDER BY SUM(CASE WHEN ai.status = 'SOLD' THEN ai.currentBid ELSE 0 END) DESC")
+    List<Object[]> getSellerStatistics(@Param("limit") int limit);
 }
