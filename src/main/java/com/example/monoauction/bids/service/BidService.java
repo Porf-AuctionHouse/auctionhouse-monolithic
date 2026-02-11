@@ -18,6 +18,7 @@ import com.example.monoauction.watchlist.repository.WatchlistRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
@@ -41,6 +42,7 @@ public class BidService {
     private final ApplicationEventPublisher eventPublisher;
     private final WatchlistRepository watchlistRepository;
 
+    @CacheEvict(value = "dashboardOverview", allEntries = true)
     public Bid placeBid(Long itemId, Long bidderId, BigDecimal bidAmount) {
         if(!batchService.isAuctionLive()){
             throw new RuntimeException("Auction Is Not Live");

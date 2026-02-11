@@ -95,4 +95,8 @@ public class UserService {
     public List<User> getAllActiveUsers(){
         return userRepository.findByIsActiveTrue();
     }
+
+    public User saveUser(User user){
+        return userRepository.save(user);
+    }
 }

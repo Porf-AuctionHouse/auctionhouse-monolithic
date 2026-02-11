@@ -12,6 +12,7 @@ import com.example.monoauction.user.model.User;
 import com.example.monoauction.user.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
@@ -39,6 +40,7 @@ public class AdminReviewService {
      return itemRepository.findByBatchIdAndStatusIn(currentBatch.getId(),reviewStatus);
     }
 
+    @CacheEvict(value = "dashboardOverview", allEntries = true)
     public AuctionItem approveItem(Long itemId, Long adminId, String notes){
         AuctionItem item = itemRepository.findById(itemId)
                 .orElseThrow(() -> new RuntimeException("Item Not Found With These Details"));
@@ -65,6 +67,7 @@ public class AdminReviewService {
         return savedItem;
     }
 
+    @CacheEvict(value = "dashboardOverview", allEntries = true)
     public AuctionItem rejectItem(Long itemId, Long adminId, String reason){
         AuctionItem item = itemRepository.findById(itemId)
                 .orElseThrow(() -> new RuntimeException("Item Not Found With These Details"));
@@ -90,6 +93,7 @@ public class AdminReviewService {
 
     }
 
+    @CacheEvict(value = "dashboardOverview", allEntries = true)
     public AuctionItem requestChanges(Long itemId, Long adminId, String feedback){
         AuctionItem item = itemRepository.findById(itemId)
                 .orElseThrow(() -> new RuntimeException("Item Not Found With These Details"));

@@ -53,6 +53,8 @@ public class User{
     @Column(precision = 10, scale = 2)
     private BigDecimal balance = BigDecimal.ZERO;
 
+    private LocalDateTime lastLoginAt;
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
